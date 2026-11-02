@@ -1,0 +1,56 @@
+{
+  "id": "/",
+  "name": "Vyuhaa Continuum Care — OPD & Vicinity Health",
+  "short_name": "Vyuhaa OPD",
+  "description": "Assistive OPD base app connecting doctors with vicinity pathology labs and pharmacy vendors via ONDC.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#881337",
+  "background_color": "#faf7f5",
+  "categories": ["medical", "health", "productivity"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Doctor Consultation Desk",
+      "short_name": "Doctor OPD",
+      "description": "Launch Doctor Consultation Desk",
+      "url": "/?portal=OPD&role=DOCTOR",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Triage & Front Desk",
+      "short_name": "Reception",
+      "description": "Launch Patient Registration & Triage Desk",
+      "url": "/?portal=OPD&role=RECEPTION",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Vicinity Order Dispatch",
+      "short_name": "Vicinity Radar",
+      "description": "Connect with local Pathology & Pharmacy shops",
+      "url": "/?portal=VICINITY",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

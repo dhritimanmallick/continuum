@@ -1,0 +1,7 @@
+{
+  "name": "Continuum — Maternal & Child Care-Gap Registry",
+  "description": "Assistive care-gap registry for mother, pregnancy, foetus, newborn and child in tier-2 hospital OPDs. Answers: Who is overdue today, for what, and why?",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

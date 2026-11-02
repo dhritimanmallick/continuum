@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+/* 
+ * Explicit Arial font application across all typography elements
+ * as requested by user.
+ */
+:root {
+  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif !important;
+}
+
+*, *::before, *::after {
+  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif !important;
+}
+
+html, body {
+  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6, .font-display, button, input, select, textarea, span, p, div, label {
+  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif !important;
+}
+
+/* Lively heartbeat pulse */
+@keyframes heartPulse {
+  0% { transform: scale(1); }
+  14% { transform: scale(1.15); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.18); }
+  70% { transform: scale(1); }
+}
+
+.animate-heart-beat {
+  animation: heartPulse 1.4s ease-in-out infinite;
+}
+
+/* Warm celebratory sparkle float */
+@keyframes floatGentle {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
+}
+
+.animate-float-gentle {
+  animation: floatGentle 3s ease-in-out infinite;
+}
+
+/* Integration bus pulse */
+@keyframes busDataFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-data-flow {
+  background-size: 200% 200%;
+  animation: busDataFlow 3s ease infinite;
+}
