@@ -1,3 +1,4 @@
+import { apiUrl } from '../../services/apiBase';
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Sparkles, 
@@ -68,7 +69,7 @@ Important Safety Notice: I provide educational reference information only. I can
     setLoading(true);
 
     try {
-      const response = await fetch('/api/ai/knowledge-counselling', {
+      const response = await fetch(apiUrl('/api/ai/knowledge-counselling'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

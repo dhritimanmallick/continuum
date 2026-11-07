@@ -129,6 +129,12 @@ export const PatientPortalView: React.FC<PatientPortalViewProps> = ({
         <PortalSidebarLayout
           activeId={activeTab}
           onSelect={id => setActiveTab(id as PatientPortalTab)}
+          mobileTabs={[
+            { id: 'OVERVIEW', label: 'Home' },
+            { id: 'MY_SCHEDULE', label: 'Schedule' },
+            { id: 'DOCTORS_ESTIMATES', label: 'Find care' },
+            { id: 'ABHA_RECORDS', label: 'Records' },
+          ]}
           header={
             <div className="space-y-0.5">
               <div className="text-[10px] font-bold uppercase tracking-wider text-rose-700">
@@ -156,6 +162,7 @@ export const PatientPortalView: React.FC<PatientPortalViewProps> = ({
               { id: 'WHATSAPP_FEED', label: 'Doctor WhatsApp', icon: MessageCircle },
               { id: 'ABHA_RECORDS', label: 'ABHA Health Locker', icon: ShieldCheck },
               { id: 'consents', label: 'Hospital Consents', icon: Building2, onClick: () => setShowConsentManager(true) },
+              { id: 'privacy', label: 'Privacy policy', icon: ShieldCheck, onClick: () => { window.location.href = '/privacy.html'; } },
             ]},
             { heading: 'Pregnancy & family', items: [
               { id: 'LABOUR_TRACKER', label: 'Labour Live Tracker', icon: Baby },

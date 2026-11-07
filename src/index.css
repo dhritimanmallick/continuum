@@ -56,3 +56,27 @@ h1, h2, h3, h4, h5, h6, .font-display, button, input, select, textarea, span, p,
   background-size: 200% 200%;
   animation: busDataFlow 3s ease infinite;
 }
+
+/* ---------- Phone layout (≤ 640px) ---------- */
+@media (max-width: 640px) {
+  /* Pop-ups open full-screen on phones instead of a floating card that spills off the edge */
+  .fixed.inset-0.flex.items-center.justify-center {
+    padding: 0 !important;
+    align-items: stretch !important;
+  }
+  .fixed.inset-0.flex.items-center.justify-center > div:not(.absolute) {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 100dvh !important;
+    min-height: 100dvh;
+    border-radius: 0 !important;
+    overflow-y: auto;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  /* 16px inputs stop phones zooming into the page when a field is tapped */
+  input:not([type="checkbox"]):not([type="radio"]), select, textarea { font-size: 16px !important; }
+  /* Never let a wide child push the whole page sideways */
+  html, body { overflow-x: clip; }
+}
+/* Keep the header clear of the phone's status bar / notch */
+header.sticky { padding-top: env(safe-area-inset-top); }

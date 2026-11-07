@@ -344,8 +344,8 @@ export const PatientOverviewDashboard: React.FC<PatientOverviewDashboardProps> =
             </p>
 
             <div className="flex flex-wrap items-center gap-2 pt-2 text-xs text-slate-600 font-medium">
-              <div className="bg-slate-50 border border-slate-200 px-3 py-1 rounded-xl flex items-center gap-1.5 shadow-2xs">
-                <span className="text-slate-500 font-bold">🏥 Selected Care Center:</span>
+              <div className="bg-slate-50 border border-slate-200 px-3 py-1 rounded-xl flex items-center gap-1.5 shadow-2xs w-full sm:w-auto min-w-0">
+                <span className="text-slate-500 font-bold shrink-0">🏥 <span className="hidden sm:inline">Selected Care Center:</span><span className="sm:hidden">Care centre:</span></span>
                 <select
                   value={selectedHospitalId}
                   onChange={(e) => {
@@ -357,7 +357,7 @@ export const PatientOverviewDashboard: React.FC<PatientOverviewDashboardProps> =
                     }
                     setBookingConfirmedToast(`Switched active care center to ${center?.name}. Your constant ABHA data remains securely synchronized.`);
                   }}
-                  className="bg-transparent font-black text-rose-800 border-none focus:outline-none cursor-pointer"
+                  className="bg-transparent font-black text-rose-800 border-none focus:outline-none cursor-pointer flex-1 min-w-0 w-full truncate py-1"
                 >
                   {VICINITY_HEALTH_CENTERS.map(h => (
                     <option key={h.id} value={h.id}>{h.name} ({h.distanceKm} km)</option>

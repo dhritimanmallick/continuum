@@ -1,3 +1,4 @@
+import { apiUrl } from '../services/apiBase';
 import React, { useState } from 'react';
 import { 
   X, 
@@ -38,7 +39,7 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ onClos
   const handleRunAiExtraction = async () => {
     setIsExtracting(true);
     try {
-      const resp = await fetch('/api/ai/extract-document', {
+      const resp = await fetch(apiUrl('/api/ai/extract-document'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

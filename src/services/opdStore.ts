@@ -36,6 +36,7 @@ import {
 } from '../types';
 import { integrationBackbone } from './integrationBackbone';
 import { authService } from './authService';
+import { deliverWhatsApp } from './whatsappGateway';
 import { gamificationEngine } from './gamificationEngine';
 import { 
   generateNewbornVaccineSchedule, 
@@ -2314,6 +2315,13 @@ class OpdStore {
     };
   }
 
+  /** Show an outgoing WhatsApp message on the patient's thread and send it through the gateway (billed per message). */
+  sendWa(patient: OpdPatient, msg: any) {
+    patient.whatsappMessages.push(msg);
+    if (msg.direction === 'incoming') return;
+    void deliverWhatsApp(patient, msg, () => this.notify());
+  }
+
   notify() {
     this.listeners.forEach(fn => fn());
   }
@@ -2790,7 +2798,7 @@ class OpdStore {
       patient.preferredLanguage || 'English'
     );
 
-    patient.whatsappMessages.push({
+    this.sendWa(patient, {
       id: `WA-${Date.now()}`,
       direction: 'outgoing',
       type: 'pharmacy_referral',
@@ -2824,7 +2832,7 @@ class OpdStore {
             details: `Token #${order.tokenNumber} fulfilled at ${order.pharmacyName}. All prescribed medicines provided to patient.`
           });
 
-          patient.whatsappMessages.push({
+          this.sendWa(patient, {
             id: `WA-${Date.now()}`,
             direction: 'outgoing',
             type: 'pharmacy_dispensed',
@@ -3219,7 +3227,7 @@ class OpdStore {
     });
 
     // WhatsApp Notification to Parents
-    patient.whatsappMessages.push({
+    this.sendWa(patient, {
       id: `WA-VAC-${Date.now()}`,
       direction: 'outgoing',
       type: 'follow_up',
@@ -3316,7 +3324,7 @@ class OpdStore {
       lang
     );
 
-    patient.whatsappMessages.push({
+    this.sendWa(patient, {
       id: `WA-${Date.now()}`,
       direction: 'outgoing',
       type: 'doctor_calling',
@@ -3411,7 +3419,7 @@ class OpdStore {
       patient.preferredLanguage || 'English'
     );
 
-    patient.whatsappMessages.push({
+    this.sendWa(patient, {
       id: `WA-${Date.now()}`,
       direction: 'outgoing',
       type: 'lab_referral',
@@ -3479,7 +3487,7 @@ class OpdStore {
 
     const isFollowUpRequired = patient.followUpStatus !== 'Not Required' && !!patient.followUpDate;
 
-    patient.whatsappMessages.push({
+    this.sendWa(patient, {
       id: `WA-${Date.now()}`,
       direction: 'outgoing',
       type: 'follow_up',
@@ -3649,7 +3657,7 @@ class OpdStore {
           details: `Result: ${params.summaryText}. ${params.abdmSyncStatus === 'SYNCED' ? 'ABDM FHIR Bundle synced.' : ''}`
         });
 
-        patient.whatsappMessages.push({
+        this.sendWa(patient, {
           id: `WA-${Date.now()}`,
           direction: 'outgoing',
           type: 'lab_ready',
@@ -3852,7 +3860,7 @@ class OpdStore {
     if (!patient) return;
 
     const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    patient.whatsappMessages.push({
+    this.sendWa(patient, {
       id: `WA-${Date.now()}`,
       direction: 'outgoing',
       type: 'custom',
@@ -4030,7 +4038,7 @@ class OpdStore {
     patient.aiFollowUpSent = true;
     patient.aiFollowUpNote = message;
 
-    patient.whatsappMessages.push({
+    this.sendWa(patient, {
       id: `WA-AI-${Date.now()}`,
       direction: 'outgoing',
       type: 'ai_follow_up',
