@@ -241,7 +241,7 @@ export const ScanPrescriptionModal: React.FC<ScanPrescriptionModalProps> = ({
   const [referToPharmacy, setReferToPharmacy] = useState<boolean>(true);
   const [selectedPharmacyId, setSelectedPharmacyId] = useState<string>('pharm-inhouse');
   const [referToLab, setReferToLab] = useState<boolean>(true);
-  const [receptionistName, setReceptionistName] = useState<string>('Pooja K (Reception Desk)');
+  const [receptionistName, setReceptionistName] = useState<string>('Sister Mary Fernandez (Front Desk)');
   const [customDoctorNotes, setCustomDoctorNotes] = useState<string>(
     PRESET_PRESCRIPTIONS[0].clinicalNotes
   );
