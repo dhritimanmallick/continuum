@@ -19,9 +19,10 @@ interface RuleSimulatorModalProps {
 }
 
 export const RuleSimulatorModal: React.FC<RuleSimulatorModalProps> = ({ onClose }) => {
-  const [patientType, setPatientType] = useState<'pregnancy' | 'child'>('pregnancy');
+  const [patientType, setPatientType] = useState<'pregnancy' | 'mother' | 'child'>('pregnancy');
   const [gestationalAgeWeeks, setGestationalAgeWeeks] = useState<number>(31); // Seed Sunita default
   const [childAgeWeeks, setChildAgeWeeks] = useState<number>(12); // Seed Baby of Rekha default
+  const [postpartumDays, setPostpartumDays] = useState<number>(42);
   const [selectedFlags, setSelectedFlags] = useState<string[]>(['Previous LSCS']);
   const [recordedMilestones, setRecordedMilestones] = useState<string[]>(['A1', 'F1']); // Enrolment & dating scan completed
   const [simulationResults, setSimulationResults] = useState<SimulationResultItem[]>([]);
@@ -32,7 +33,8 @@ export const RuleSimulatorModal: React.FC<RuleSimulatorModalProps> = ({ onClose 
     'pregnancy flagged small',
     'GDM suspect',
     'Previous LSCS',
-    'Chronic hypertension'
+    'Chronic hypertension',
+    'GDM history'
   ];
 
   const handleToggleFlag = (flag: string) => {
@@ -56,6 +58,7 @@ export const RuleSimulatorModal: React.FC<RuleSimulatorModalProps> = ({ onClose 
       patientType,
       gestationalAgeWeeks: patientType === 'pregnancy' ? gestationalAgeWeeks : undefined,
       childAgeWeeks: patientType === 'child' ? childAgeWeeks : undefined,
+      postpartumDays: patientType === 'mother' ? postpartumDays : undefined,
       flags: selectedFlags,
       recordedMilestones
     }, store.rules);
@@ -111,7 +114,7 @@ export const RuleSimulatorModal: React.FC<RuleSimulatorModalProps> = ({ onClose 
             {/* Population Type */}
             <div>
               <label className="font-semibold text-slate-700 block mb-1">Population Episode</label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
                   onClick={() => setPatientType('pregnancy')}
@@ -122,6 +125,17 @@ export const RuleSimulatorModal: React.FC<RuleSimulatorModalProps> = ({ onClose 
                   }`}
                 >
                   Pregnancy Episode
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPatientType('mother')}
+                  className={`py-2 px-3 rounded-lg border font-semibold text-center cursor-pointer ${
+                    patientType === 'mother'
+                      ? 'bg-teal-700 text-white border-teal-700'
+                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  Postnatal Mother
                 </button>
                 <button
                   type="button"
@@ -159,6 +173,27 @@ export const RuleSimulatorModal: React.FC<RuleSimulatorModalProps> = ({ onClose 
                   <span>Term (37w)</span>
                 </div>
               </div>
+            ) : patientType === 'mother' ? (
+              <div className="p-3 bg-white rounded-lg border border-slate-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="font-semibold text-slate-700">Days Since Delivery</label>
+                  <span className="font-extrabold text-teal-800 text-sm">{postpartumDays} Days</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="120"
+                  value={postpartumDays}
+                  onChange={(e) => setPostpartumDays(Number(e.target.value))}
+                  className="w-full accent-teal-700 cursor-pointer"
+                />
+                <div className="flex justify-between text-[10px] text-slate-400 font-mono">
+                  <span>Day 2 check</span>
+                  <span>Day 7</span>
+                  <span>6-week (42d)</span>
+                  <span>Post-GDM OGTT (56d)</span>
+                </div>
+              </div>
             ) : (
               <div className="p-3 bg-white rounded-lg border border-slate-200 space-y-2">
                 <div className="flex items-center justify-between">
@@ -183,7 +218,7 @@ export const RuleSimulatorModal: React.FC<RuleSimulatorModalProps> = ({ onClose 
             )}
 
             {/* Clinician Flags */}
-            {patientType === 'pregnancy' && (
+            {patientType !== 'child' && (
               <div>
                 <label className="font-semibold text-slate-700 block mb-1">
                   Clinician Recorded Flags
@@ -211,7 +246,7 @@ export const RuleSimulatorModal: React.FC<RuleSimulatorModalProps> = ({ onClose 
               </label>
               <div className="p-2.5 bg-white rounded-lg border border-slate-200 max-h-36 overflow-y-auto space-y-1">
                 {store.rules
-                  .filter(r => patientType === 'pregnancy' ? (r.category === 'antenatal' || r.category === 'foetal') : (r.category === 'child' || r.category === 'newborn'))
+                  .filter(r => patientType === 'pregnancy' ? (r.category === 'antenatal' || r.category === 'foetal') : patientType === 'mother' ? r.category === 'postnatal' : (r.category === 'child' || r.category === 'newborn'))
                   .map(rule => (
                     <label key={rule.rule_id} className="flex items-center gap-2 text-[11px] p-1 rounded hover:bg-slate-50 cursor-pointer">
                       <input

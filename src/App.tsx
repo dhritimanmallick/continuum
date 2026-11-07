@@ -25,6 +25,7 @@ import { EmergencyDoctorCounsellingModal } from './components/patient/EmergencyD
 import { LabourDeliveryLiveTrackerModal } from './components/patient/LabourDeliveryLiveTrackerModal';
 import { NotificationCenterModal } from './components/patient/NotificationCenterModal';
 import { SystemVideoTourModal } from './components/video/SystemVideoTourModal';
+import { CareGapsView } from './components/CareGapsView';
 import { opdStore } from './services/opdStore';
 import { authService } from './services/authService';
 import { OpdUserRole, OpdPatient, PortalType, OpdRole, AuthUser } from './types';
@@ -222,6 +223,9 @@ export default function App() {
             }}
           />
         )}
+
+        {/* PORTAL: Care Gaps — daily overdue worklist, result loop, rules */}
+        {currentPortal === 'CARE_GAPS' && <CareGapsView />}
 
         {/* PORTAL 1: OPD Reception */}
         {currentPortal === 'OPD' && currentRole === 'RECEPTION' && (

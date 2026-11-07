@@ -110,10 +110,10 @@ export function runDiagnosticAnalysis(params: {
     if (mcvVal > 0 && rbcVal > 0) {
       mentzerIndex = Math.round((mcvVal / rbcVal) * 10) / 10;
       if (mentzerIndex > 13) {
-        correlations.push(`Mentzer Index = ${mentzerIndex} (>13): Highly predictive of nutritional Iron Deficiency Anemia rather than Thalassemia trait.`);
+        correlations.push(`Mentzer Index = ${mentzerIndex} (>13): pattern more consistent with iron deficiency than thalassaemia trait; for clinician review.`);
         differentials.push('Iron Deficiency Anemia (Microcytic Hypochromic)');
       } else if (mentzerIndex <= 13) {
-        correlations.push(`Mentzer Index = ${mentzerIndex} (<=13): Consider screening for Beta Thalassemia Trait or Hemoglobinopathy via HPLC electrophoresis.`);
+        correlations.push(`Mentzer Index = ${mentzerIndex} (<=13): pattern can be seen in thalassaemia trait; clinician to consider whether HPLC is indicated.`);
         differentials.push('Beta-Thalassemia Trait screening recommended');
       }
     }
@@ -122,17 +122,17 @@ export function runDiagnosticAnalysis(params: {
       overallStatus = hbVal < 8.0 ? 'CRITICAL_ALERT' : 'ATTENTION_NEEDED';
       
       if (hbVal < 7.0) {
-        primaryFinding = `Severe Maternal Anemia (Hb ${hbVal} g/dL). Urgent intravenous iron sucrose / ferric carboxymaltose or blood crossmatch indicated.`;
+        primaryFinding = `Hb ${hbVal} g/dL is below the severe-anaemia threshold (< 7 g/dL, WHO). Flagged urgent for the treating doctor.`;
         recommendations.push('Stat clinical escalation to OB-GYN Consultant');
         recommendations.push('Evaluate Parenteral Ferric Carboxymaltose (FCM) or Packed RBC reserve');
         recommendations.push('Serial fetal biometry & Doppler assessment');
       } else if (hbVal < 10.0) {
-        primaryFinding = `Moderate Microcytic Anemia (Hb ${hbVal} g/dL). Intensified therapeutic iron supplementation required.`;
+        primaryFinding = `Hb ${hbVal} g/dL is in the moderate-anaemia range (WHO). Flagged for the treating doctor.`;
         recommendations.push('Double-dose Oral Elemental Iron (100mg elemental iron BD with Vitamin C / citrus)');
         recommendations.push('Counsel patient: strict 2-hour separation between Iron and Calcium/dairy');
         recommendations.push('Repeat Complete Hemogram & Peripheral Smear in 3–4 weeks');
       } else {
-        primaryFinding = `Mild Maternal Anemia (Hb ${hbVal} g/dL). Physiological hemodilution with nutritional iron requirement.`;
+        primaryFinding = `Hb ${hbVal} g/dL is in the mild-anaemia range for this trimester (WHO). For clinician review.`;
         recommendations.push('Continue standard prophylactic Iron & Folic Acid (IFA 100mg OD)');
         recommendations.push('Reinforce dietary iron compliance (green leafy vegetables, jaggery, legumes)');
       }
@@ -150,7 +150,7 @@ export function runDiagnosticAnalysis(params: {
         ? `Patient is in 2nd/early 3rd trimester (${gestationWeeks}w) where plasma volume reaches its peak nadir. While physiological hemodilution contributes, target maternal Hb is >= 10.5 g/dL.`
         : 'Target maternal Hb in 1st & 3rd trimesters is >= 11.0 g/dL (WHO & FOGSI guidelines).';
     } else if (hbVal >= 11.0) {
-      primaryFinding = `Optimal Maternal Hemoglobin (${hbVal} g/dL) within physiological safety target.`;
+      primaryFinding = `Hb ${hbVal} g/dL is within the trimester reference range.`;
       recommendations.push('Maintain routine antenatal prophylactic IFA tablets');
     }
 
@@ -176,20 +176,20 @@ export function runDiagnosticAnalysis(params: {
       overallStatus = (fpgVal >= 126 || ogttVal >= 200) ? 'CRITICAL_ALERT' : 'ATTENTION_NEEDED';
       
       if (fpgVal >= 126 || ogttVal >= 200) {
-        primaryFinding = `Overt Diabetes in Pregnancy (FPG ${fpgVal || '—'} mg/dL, 2-hr ${ogttVal || '—'} mg/dL).`;
+        primaryFinding = `Glucose values meet the threshold for overt diabetes in pregnancy (FPG ${fpgVal || '—'} mg/dL, 2-hr ${ogttVal || '—'} mg/dL). For clinician review.`;
         differentials.push('Pre-existing Diabetes Unmasked in Pregnancy', 'Severe GDM');
         recommendations.push('Immediate Endocrine / Diabetology consultation');
         recommendations.push('Initiate Medical Nutrition Therapy (MNT) & self-monitoring of blood glucose (SMBG)');
         recommendations.push('Evaluate Insulin therapy initiation');
       } else if (ogttVal >= 153 || fpgVal >= 92) {
-        primaryFinding = `Gestational Diabetes Mellitus (GDM) confirmed by DIPSI / IADPSG Criteria (2-hr: ${ogttVal} mg/dL, Fasting: ${fpgVal} mg/dL).`;
+        primaryFinding = `Meets DIPSI / IADPSG threshold for GDM (2-hr: ${ogttVal} mg/dL, Fasting: ${fpgVal} mg/dL). For clinician review.`;
         differentials.push('Gestational Diabetes Mellitus (GDM)');
         recommendations.push('Prescribe Medical Nutrition Therapy (MNT) with certified clinical nutritionist');
         recommendations.push('Target SMBG levels: Fasting < 95 mg/dL, 1-hr post-meal < 140 mg/dL, 2-hr < 120 mg/dL');
         recommendations.push('Review after 2 weeks of dietary modification');
         recommendations.push('Fetal surveillance: Serial growth scans every 3-4 weeks for macrosomia & polyhydramnios');
       } else if (ogttVal >= 140) {
-        primaryFinding = `Impaired Glucose Tolerance (2-hr: ${ogttVal} mg/dL). Borderline glycaemic curve.`;
+        primaryFinding = `2-hr glucose ${ogttVal} mg/dL is near the GDM threshold. For clinician review.`;
         recommendations.push('Counsel on low glycaemic index nutrition and regular physical activity');
         recommendations.push('Repeat 75g OGTT in 4 weeks');
       }
@@ -197,7 +197,7 @@ export function runDiagnosticAnalysis(params: {
       correlations.push('Placental lactogen (hPL), cortisol, and progesterone cause peripheral insulin resistance peaking at 24-28 weeks gestation.');
       trimesterInsight = 'Gestational diabetes testing is standard between 24 and 28 weeks gestation. Strict euglycaemia prevents fetal macrosomia, shoulder dystocia, and neonatal hypoglycemia.';
     } else if (ogttVal > 0 || fpgVal > 0) {
-      primaryFinding = `Normal Glucose Tolerance Curve (Fasting: ${fpgVal || 88} mg/dL, 2-hr: ${ogttVal || 132} mg/dL). GDM ruled out.`;
+      primaryFinding = `Normal Glucose Tolerance Curve (Fasting: ${fpgVal || 88} mg/dL, 2-hr: ${ogttVal || 132} mg/dL). Below DIPSI / IADPSG GDM thresholds.`;
       recommendations.push('Maintain balanced antenatal nutrition and routine follow-up');
     }
   }
@@ -211,11 +211,11 @@ export function runDiagnosticAnalysis(params: {
       overallStatus = tshVal > 10.0 ? 'CRITICAL_ALERT' : 'ATTENTION_NEEDED';
       
       if (ft4Val > 0 && ft4Val < 0.8) {
-        primaryFinding = `Overt Maternal Hypothyroidism (TSH ${tshVal} mIU/L, low Free T4 ${ft4Val} ng/dL).`;
+        primaryFinding = `TSH ${tshVal} mIU/L above and Free T4 ${ft4Val} ng/dL below trimester ranges. For clinician review.`;
         differentials.push('Overt Hypothyroidism of Pregnancy', 'Hashimoto Thyroiditis');
         recommendations.push('Initiate Tab. Levothyroxine (Thyronorm) 50-75 mcg OD on empty stomach');
       } else {
-        primaryFinding = `Subclinical Hypothyroidism of Pregnancy (TSH ${tshVal} mIU/L with normal FT4).`;
+        primaryFinding = `TSH ${tshVal} mIU/L above trimester range with Free T4 in range. For clinician review.`;
         differentials.push('Subclinical Hypothyroidism', 'Autoimmune Thyroiditis');
         recommendations.push('Initiate Tab. Levothyroxine 25–50 mcg daily (take with water 1 hr before breakfast)');
       }
@@ -224,10 +224,10 @@ export function runDiagnosticAnalysis(params: {
       correlations.push('Maternal thyroxine is vital for early fetal neurocognitive development. Upper trimester TSH limit is strictly 2.5–3.0 mIU/L.');
       trimesterInsight = 'Fetal thyroid only begins concentrating iodine at 12–14 weeks; prior to this, the fetus is entirely dependent on maternal T4 transfer.';
     } else if (tshVal > 0 && tshVal < 0.1) {
-      primaryFinding = `Suppressed TSH (${tshVal} mIU/L). Check for gestational transient thyrotoxicosis or hyperemesis gravidarum.`;
+      primaryFinding = `TSH ${tshVal} mIU/L below trimester range. For clinician review.`;
       recommendations.push('Correlate with Free T4, Free T3, and presence of vomiting/tachycardia');
     } else if (tshVal > 0) {
-      primaryFinding = `Euthyroid State (TSH ${tshVal} mIU/L within maternal trimester target).`;
+      primaryFinding = `TSH ${tshVal} mIU/L within the trimester reference range.`;
       recommendations.push('Routine antenatal care; no thyroid medication required');
     }
   }
@@ -244,7 +244,7 @@ export function runDiagnosticAnalysis(params: {
       recommendations.push('Immediate Blood Pressure check in right brachial artery');
       recommendations.push('Order 24-hour urine protein or spot Urine Protein-to-Creatinine Ratio (UPCR)');
       recommendations.push('Screen for symptoms: headache, visual scotoma, epigastric pain');
-      primaryFinding = `Proteinuria (${urineProteinParam?.value}) on routine urinalysis. Pre-eclampsia workup advised.`;
+      primaryFinding = `Proteinuria (${urineProteinParam?.value}) on routine urinalysis. Flagged for the treating doctor.`;
     }
 
     if (pusVal > 5 || (pusCellsParam?.value || '').includes('numerous')) {

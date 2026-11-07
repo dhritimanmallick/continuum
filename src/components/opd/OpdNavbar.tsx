@@ -288,6 +288,22 @@ export const OpdNavbar: React.FC<OpdNavbarProps> = ({
             <span>Admin</span>
           </button>
 
+          {/* Care Gaps: daily overdue worklist */}
+          <button
+            onClick={() => {
+              onPortalChange('CARE_GAPS');
+              opdStore.setPortal('CARE_GAPS');
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition cursor-pointer shrink-0 ${
+              currentPortal === 'CARE_GAPS'
+                ? 'bg-teal-700 text-white shadow-xs'
+                : 'text-teal-800 hover:text-teal-900'
+            }`}
+            title="Who is overdue today, for what, and why"
+          >
+            <span>Care Gaps</span>
+          </button>
+
           {/* Portal 1: OPD Outpatient Clinics */}
           <div className="flex items-center shrink-0">
             <button
