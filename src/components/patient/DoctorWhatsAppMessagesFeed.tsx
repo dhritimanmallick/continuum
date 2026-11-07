@@ -147,7 +147,7 @@ export const DoctorWhatsAppMessagesFeed: React.FC<DoctorWhatsAppMessagesFeedProp
       <div className="bg-[#efeae2] rounded-3xl border border-slate-300 p-4 sm:p-6 space-y-4 max-h-[550px] overflow-y-auto shadow-inner">
         <div className="text-center my-2">
           <span className="text-[10px] bg-white/80 text-slate-600 font-semibold px-3 py-1 rounded-full shadow-2xs border border-slate-200">
-            Messages are end-to-end encrypted and integrated with St. Anne EHR
+            Messages are end-to-end encrypted and linked to your ABHA health record
           </span>
         </div>
 

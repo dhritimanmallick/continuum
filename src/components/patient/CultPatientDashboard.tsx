@@ -77,80 +77,57 @@ export const PatientOverviewDashboard: React.FC<PatientOverviewDashboardProps> =
   const [activeVideoModal, setActiveVideoModal] = useState<{
     title: string;
     instructor: string;
-    duration: string;
     role: string;
-    keyPoints: string[];
     summary: string;
+    youtubeId: string;
   } | null>(null);
 
   const doctors = opdStore.getDoctorProfiles();
 
-  // Curated clinical health guidance videos
+  // Doctor guidance videos: real YouTube videos published by Cloudnine Hospitals (IDs verified via YouTube oEmbed)
   const guidanceVideos = [
     {
-      id: 'vid-1',
-      title: 'Third Trimester Nutrition & Safe Iron Timing',
-      instructor: 'Dr. Anita Rao',
-      role: 'Senior Consultant OB/GYN',
-      duration: '4 mins',
-      tag: 'Week 28 Recommended',
-      badgeColor: 'bg-rose-50 text-rose-700 border-rose-200',
-      summary: 'Why taking Tab Iron at night away from Calcium doubles absorption and prevents third-trimester fatigue.',
-      keyPoints: [
-        'Take Iron supplements at night or with Vitamin C (lemon water / orange juice)',
-        'Never take Iron and Calcium together — keep a minimum 2-hour gap',
-        'Mild anemia (Hb 10.2 g/dL) is common and reversible with compliance',
-        'Notify doctor immediately if experiencing dizziness or severe swelling'
-      ]
+      id: 'vid-ogtt', youtubeId: '-iBE1C7oRKc',
+      title: 'Oral Glucose Tolerance Test (OGTT)',
+      instructor: 'Dr. Ashima Gulia', role: 'Senior Consultant, Obstetrics & Gynaecology',
+      tag: 'Due at 24-28 weeks', badgeColor: 'bg-rose-50 text-rose-700 border-rose-200',
+      summary: 'What the glucose test involves and how to prepare for it.',
     },
     {
-      id: 'vid-2',
-      title: 'What to Expect in Your 75g OGTT Glucose Test',
-      instructor: 'Dr. Suniti Patel',
-      role: 'Chief Pathologist • Apex Diagnostics',
-      duration: '3 mins',
-      tag: 'Upcoming Lab Test',
-      badgeColor: 'bg-purple-50 text-purple-700 border-purple-200',
-      summary: 'Step-by-step preparation for your fasting oral glucose tolerance test to screen for gestational diabetes.',
-      keyPoints: [
-        'Fast for 8 to 10 hours overnight before morning phlebotomist arrival',
-        'Drink plain water freely; avoid sweetened beverages or midnight snacks',
-        'You will consume 75g glucose dissolved in 300ml water within 5 minutes',
-        'Blood will be drawn at fasting, 1 hour, and 2 hours for NABL verification'
-      ]
+      id: 'vid-gdm', youtubeId: 'mk8UnNlNFWw',
+      title: 'Diabetes in Pregnancy: What You Should Know',
+      instructor: 'Dr. Modhulika Bhattacharya', role: 'Consultant Obstetrician & Gynaecologist',
+      tag: 'Gestational diabetes', badgeColor: 'bg-amber-50 text-amber-700 border-amber-200',
+      summary: 'An obstetrician explains gestational diabetes and why it is screened for.',
     },
     {
-      id: 'vid-3',
-      title: 'Pelvic Floor Gentle Breathing & Antenatal Stretches',
-      instructor: 'Sister Mary Joseph',
-      role: 'Senior Maternal Nurse Specialist',
-      duration: '5 mins',
-      tag: 'Daily Routine',
-      badgeColor: 'bg-teal-50 text-teal-700 border-teal-200',
-      summary: 'Gentle, doctor-approved breathing techniques and pelvic floor strengthening for third trimester comfort.',
-      keyPoints: [
-        'Slow diaphragmatic breathing: inhale 4 seconds, exhale 6 seconds',
-        'Gentle butterfly stretch against a firm wall with back supported',
-        'Avoid lying flat on your back; always rest on your left side',
-        'Stop immediately if experiencing cramps or shortness of breath'
-      ]
+      id: 'vid-diet', youtubeId: '4dlSiQQFCfE',
+      title: 'Pregnancy Diet: What to Eat & Avoid',
+      instructor: 'Dr. Jyotsna Gupta', role: 'Consultant Obstetrician & Gynaecologist',
+      tag: 'Nutrition', badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      summary: 'Practical guidance on eating well during pregnancy.',
     },
     {
-      id: 'vid-4',
-      title: 'Signs of True Labour vs False Contractions',
-      instructor: 'Dr. Anita Rao',
-      role: 'Senior Consultant OB/GYN',
-      duration: '6 mins',
-      tag: 'Preparation for Delivery',
-      badgeColor: 'bg-amber-50 text-amber-700 border-amber-200',
-      summary: 'Learn the 3 definitive signs of active labour and when to head to St. Anne Hospital labour suite.',
-      keyPoints: [
-        'Braxton Hicks are irregular and ease with walking or resting',
-        'True contractions occur every 5 minutes, lasting 45-60 seconds, and grow stronger',
-        'Any fluid leakage (water breaking) requires immediate hospital admission',
-        '24x7 St. Anne Emergency Labour Room Helpline is 080-2211-9999'
-      ]
-    }
+      id: 'vid-exercise', youtubeId: 'iuKz1e23Dps',
+      title: 'A Guide to Working Out While Pregnant',
+      instructor: 'Dr. Maljini N.', role: 'Cloudnine Hospitals',
+      tag: 'Staying active', badgeColor: 'bg-teal-50 text-teal-700 border-teal-200',
+      summary: 'Why exercise matters in pregnancy and which kinds are recommended.',
+    },
+    {
+      id: 'vid-labour', youtubeId: 'ivIkUdd-7XQ',
+      title: 'Signs of Labour: When to Go to the Hospital',
+      instructor: 'Dr. Modhulika Bhattacharya', role: 'Consultant Obstetrician & Gynaecologist',
+      tag: 'Preparing for delivery', badgeColor: 'bg-purple-50 text-purple-700 border-purple-200',
+      summary: 'The key signs of labour and when to head to the hospital.',
+    },
+    {
+      id: 'vid-warning', youtubeId: 'tSLlIgeT_eQ',
+      title: 'Pregnancy Warning Signs: When to Rush to the Hospital',
+      instructor: 'Dr. Manisha Ranjan', role: 'Consultant Obstetrician & Gynaecologist',
+      tag: 'Safety', badgeColor: 'bg-red-50 text-red-700 border-red-200',
+      summary: 'Warning signs in pregnancy that need urgent hospital care.',
+    },
   ];
 
   // Verified vicinity providers
@@ -423,6 +400,103 @@ export const PatientOverviewDashboard: React.FC<PatientOverviewDashboardProps> =
         </div>
       </div>
 
+      {/* 2. YOUR UP-NEXT CHECK-UPS (FIRST THING ON THE HOME SCREEN) */}
+      <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div>
+            <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+              <span>📅 Your Upcoming Check-ups</span>
+              <span className="text-[10px] bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded-full border border-blue-200">
+                {multiHospitalConsentService.getBookedAppointments().filter(a => a.status === 'CONFIRMED').length + 1} upcoming
+              </span>
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Care routines recommended by Dr. Anita Rao for your 28th gestational week.
+            </p>
+          </div>
+
+          <button
+            onClick={onOpenSchedule}
+            className="text-xs font-bold text-rose-700 hover:text-rose-800 flex items-center gap-1 cursor-pointer"
+          >
+            <span>View Full Timeline</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          {/* Booked appointments across the network (newest bookings appear here immediately) */}
+          {multiHospitalConsentService.getBookedAppointments().filter(a => a.status === 'CONFIRMED').map(apt => (
+            <div key={apt.id} className="p-4 rounded-2xl bg-rose-50/50 border border-rose-200 space-y-2">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <span className="text-[10px] font-extrabold uppercase bg-rose-100 text-rose-800 px-2 py-0.5 rounded">Confirmed visit</span>
+                  <h3 className="text-sm font-extrabold text-slate-900 mt-1">{apt.serviceType}</h3>
+                  <p className="text-xs text-slate-600 font-medium">{apt.doctorName}</p>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="text-xs font-black text-rose-800">{new Date(apt.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</div>
+                  <div className="text-[11px] font-bold text-slate-600">{apt.slot}</div>
+                </div>
+              </div>
+              <div className="text-[11px] text-slate-500 flex items-center justify-between gap-2">
+                <span>📍 {apt.hospitalName}</span>
+                {apt.abhaConsentVerified && <span className="text-emerald-700 font-bold">ABHA records shared</span>}
+              </div>
+            </div>
+          ))}
+
+          {/* Card 2: Fasting Blood Draw */}
+          <div className="p-4 rounded-2xl bg-purple-50/50 border border-purple-200 space-y-3">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <span className="text-[10px] font-extrabold uppercase bg-purple-100 text-purple-800 px-2 py-0.5 rounded">
+                  Diagnostic Blood Draw
+                </span>
+                <h3 className="text-sm font-extrabold text-slate-900 mt-1">
+                  75g Oral Glucose Tolerance Test (OGTT) &amp; CBC
+                </h3>
+                <p className="text-xs text-slate-600 font-medium">
+                  Apex Diagnostics Hub (ONDC Node)
+                </p>
+                <p className="text-[11px] text-slate-500">
+                  Free Doorstep Phlebotomist Collection (Barcoded: SP-8842)
+                </p>
+              </div>
+              <div className="text-right shrink-0">
+                <span className="text-xs font-black text-slate-900 block font-mono">
+                  12 Nov 2026
+                </span>
+                <span className="text-[11px] font-bold text-purple-700">
+                  08:30 AM
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-purple-200/60">
+              <span className="px-2.5 py-1 rounded-xl bg-white border border-purple-200 text-purple-900 text-[11px] font-bold">
+                ✓ 8h Fasting Required
+              </span>
+              <button
+                onClick={() => {
+                  const vid = guidanceVideos.find(v => v.id === 'vid-2');
+                  if (vid) setActiveVideoModal(vid);
+                }}
+                className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-[11px] font-bold flex items-center gap-1 cursor-pointer"
+              >
+                <Play className="w-3 h-3 fill-white" />
+                <span>Watch Test Prep Video (3m)</span>
+              </button>
+              <span className="text-[10px] font-semibold text-slate-500 ml-auto">
+                Syncs to ABHA
+              </span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
       {/* 2. TOP PRIORITY: BASIC APPOINTMENT BOOKING SYSTEM RIGHT ON DASHBOARD */}
       <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
@@ -633,127 +707,129 @@ export const PatientOverviewDashboard: React.FC<PatientOverviewDashboardProps> =
         </div>
       </div>
 
-      {/* 3. YOUR UP-NEXT SCHEDULE (DIRECTLY ON THE MAIN DASHBOARD) */}
+      {/* 5. VIDEO SESSIONS & DOCTOR GUIDANCE (ON THE MAIN DASHBOARD) */}
       <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div>
             <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
-              <span>📅 Your Up-Next Schedule &amp; Care Milestones</span>
-              <span className="text-[10px] bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded-full border border-blue-200">
-                2 Confirmed
+              <span>📹 Video Consultations &amp; Guidance Sessions</span>
+              <span className="text-[10px] bg-rose-50 text-rose-700 font-bold px-2 py-0.5 rounded-full border border-rose-200">
+                Real doctor videos
               </span>
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Care routines recommended by Dr. Anita Rao for your 28th gestational week.
+              Short videos from practising obstetricians on YouTube, picked for your stage of pregnancy.
             </p>
           </div>
 
           <button
-            onClick={onOpenSchedule}
-            className="text-xs font-bold text-rose-700 hover:text-rose-800 flex items-center gap-1 cursor-pointer"
+            onClick={onOpenTeleCounselling}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white text-xs font-bold shadow-xs transition cursor-pointer"
           >
-            <span>View Full Timeline</span>
+            <PhoneCall className="w-3.5 h-3.5" />
+            <span>5-Min Urgent Doctor Call</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {guidanceVideos.map(vid => (
+            <button
+              type="button"
+              key={vid.id}
+              onClick={() => setActiveVideoModal(vid)}
+              className="text-left rounded-2xl border border-slate-200 overflow-hidden hover:border-rose-400 hover:shadow-md transition cursor-pointer group bg-white flex flex-col"
+            >
+              <div className="relative aspect-video bg-slate-900">
+                <img
+                  src={`https://i.ytimg.com/vi/${vid.youtubeId}/hqdefault.jpg`}
+                  alt=""
+                  loading="lazy"
+                  className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition"
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-11 h-11 rounded-full bg-rose-600/95 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition">
+                    <Play className="w-4 h-4 fill-white ml-0.5" />
+                  </div>
+                </div>
+                <span className="absolute top-2 left-2 text-[9px] font-bold px-2 py-0.5 rounded-full bg-black/60 text-white">YouTube</span>
+              </div>
+              <div className="p-3.5 space-y-1.5 flex-1">
+                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border inline-block ${vid.badgeColor}`}>{vid.tag}</span>
+                <h3 className="text-xs font-extrabold text-slate-900 leading-snug">{vid.title}</h3>
+                <p className="text-[11px] text-slate-500">{vid.instructor} · {vid.role}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+        <p className="text-[10px] text-slate-400">Videos published by Cloudnine Hospitals on YouTube. General education only; follow your own doctor's advice.</p>
+      </div>
+
+      {/* 6. DOCTOR WHATSAPP MESSAGES & PRESCRIPTION FEED (ON DASHBOARD) */}
+      <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div>
+            <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+              <span>💬 Doctor WhatsApp Feed &amp; Prescriptions</span>
+              <span className="text-[10px] bg-emerald-50 text-emerald-800 font-bold px-2 py-0.5 rounded-full border border-emerald-200">
+                Official Stream
+              </span>
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Verified clinical instructions and signed PDF prescriptions from Dr. Anita Rao.
+            </p>
+          </div>
+
+          <button
+            onClick={onOpenDoctorWhatsApp}
+            className="text-xs font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 cursor-pointer"
+          >
+            <span>Open Full Chat History</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          
-          {/* Card 1: Confirmed OPD Consultation */}
-          <div className="p-4 rounded-2xl bg-rose-50/50 border border-rose-200 space-y-3">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <span className="text-[10px] font-extrabold uppercase bg-rose-100 text-rose-800 px-2 py-0.5 rounded">
-                  Confirmed OPD Visit
-                </span>
-                <h3 className="text-sm font-extrabold text-slate-900 mt-1">
-                  28-Week Antenatal Clinical Review
-                </h3>
-                <p className="text-xs text-slate-600 font-medium">
-                  Dr. Anita Rao, Senior Consultant OB/GYN
-                </p>
-                <p className="text-[11px] text-slate-500">
-                  Room 4 Maternal Suite • St. Anne Hospital
-                </p>
-              </div>
-              <div className="text-right shrink-0">
-                <span className="text-xs font-black text-slate-900 block font-mono">
-                  12 Nov 2026
-                </span>
-                <span className="text-[11px] font-bold text-rose-700">
-                  10:30 AM
-                </span>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-rose-200/60">
-              <button
-                onClick={onOpenTeleCounselling}
-                className="px-3 py-1.5 rounded-xl bg-white text-slate-900 border border-slate-300 hover:bg-slate-50 text-[11px] font-bold flex items-center gap-1 cursor-pointer"
-              >
-                <Video className="w-3 h-3 text-rose-600" />
-                <span>Join Video Room</span>
-              </button>
-              <button
-                onClick={onOpenVicinityMap}
-                className="px-3 py-1.5 rounded-xl bg-white text-slate-900 border border-slate-300 hover:bg-slate-50 text-[11px] font-bold flex items-center gap-1 cursor-pointer"
-              >
-                <Navigation className="w-3 h-3 text-blue-600" />
-                <span>Hospital Directions</span>
-              </button>
-              <span className="text-[10px] font-semibold text-slate-500 ml-auto">
-                OPD Fee: ₹500 (Out-of-Pocket)
+        {/* WhatsApp Card Preview */}
+        <div className="bg-[#efeae2]/80 p-4 rounded-2xl border border-slate-300 space-y-3">
+          <div className="bg-white p-3.5 rounded-2xl border border-slate-200 max-w-2xl text-xs space-y-2 shadow-2xs">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-emerald-800 text-xs">
+                Dr. Anita Rao (OB/GYN) · your primary obstetrician
               </span>
+              <span className="text-[10px] text-slate-400">Today, 09:15 AM</span>
+            </div>
+            <p className="text-slate-800 leading-relaxed">
+              Dear Sunita, your 28-week antenatal clinical review has been recorded. Your vital signs (BP 118/76, FHR 142 bpm) are reassuring. Please download your official digital signed prescription PDF below.
+            </p>
+
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <span className="text-xl">📄</span>
+                <div>
+                  <h4 className="font-bold text-slate-900 text-xs">Prescription_Sunita_28w.pdf</h4>
+                  <p className="text-[10px] text-slate-500">184 KB • Cryptographically signed by Dr. Anita Rao</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => alert('Downloading official signed prescription PDF: Prescription_Sunita_28w.pdf')}
+                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1 cursor-pointer"
+              >
+                <Download className="w-3 h-3" />
+                <span>Download PDF</span>
+              </button>
             </div>
           </div>
 
-          {/* Card 2: Fasting Blood Draw */}
-          <div className="p-4 rounded-2xl bg-purple-50/50 border border-purple-200 space-y-3">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <span className="text-[10px] font-extrabold uppercase bg-purple-100 text-purple-800 px-2 py-0.5 rounded">
-                  Diagnostic Blood Draw
-                </span>
-                <h3 className="text-sm font-extrabold text-slate-900 mt-1">
-                  75g Oral Glucose Tolerance Test (OGTT) &amp; CBC
-                </h3>
-                <p className="text-xs text-slate-600 font-medium">
-                  Apex Diagnostics Hub (ONDC Node)
-                </p>
-                <p className="text-[11px] text-slate-500">
-                  Free Doorstep Phlebotomist Collection (Barcoded: SP-8842)
-                </p>
-              </div>
-              <div className="text-right shrink-0">
-                <span className="text-xs font-black text-slate-900 block font-mono">
-                  12 Nov 2026
-                </span>
-                <span className="text-[11px] font-bold text-purple-700">
-                  08:30 AM
-                </span>
-              </div>
+          {/* Timed reminder pill */}
+          <div className="bg-white p-3 rounded-2xl border border-slate-200 max-w-lg text-xs space-y-1 shadow-2xs">
+            <div className="flex items-center gap-2 text-emerald-800 font-bold text-[11px]">
+              <span>⏰ Timed Medication Reminder</span>
+              <span className="text-slate-400 font-normal">• 2:00 PM</span>
             </div>
-
-            <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-purple-200/60">
-              <span className="px-2.5 py-1 rounded-xl bg-white border border-purple-200 text-purple-900 text-[11px] font-bold">
-                ✓ 8h Fasting Required
-              </span>
-              <button
-                onClick={() => {
-                  const vid = guidanceVideos.find(v => v.id === 'vid-2');
-                  if (vid) setActiveVideoModal(vid);
-                }}
-                className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-[11px] font-bold flex items-center gap-1 cursor-pointer"
-              >
-                <Play className="w-3 h-3 fill-white" />
-                <span>Watch Test Prep Video (3m)</span>
-              </button>
-              <span className="text-[10px] font-semibold text-slate-500 ml-auto">
-                Syncs to ABHA
-              </span>
-            </div>
+            <p className="text-slate-700">
+              💊 Please take <strong>Tab Calcium Carbonate 500mg</strong> after lunch with plain water. Maintain a 2-hour interval away from your Iron tablet.
+            </p>
           </div>
-
         </div>
       </div>
 
@@ -1049,232 +1125,45 @@ export const PatientOverviewDashboard: React.FC<PatientOverviewDashboardProps> =
         )}
       </div>
 
-      {/* 5. VIDEO SESSIONS & DOCTOR GUIDANCE (ON THE MAIN DASHBOARD) */}
-      <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <div>
-            <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
-              <span>📹 Video Consultations &amp; Guidance Sessions</span>
-              <span className="text-[10px] bg-rose-50 text-rose-700 font-bold px-2 py-0.5 rounded-full border border-rose-200">
-                Curated Clinical Guides
-              </span>
-            </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Short, high-yield clinical guidance videos recorded by St. Anne Hospital specialists for Week 28.
-            </p>
-          </div>
-
-          <button
-            onClick={onOpenTeleCounselling}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white text-xs font-bold shadow-xs transition cursor-pointer"
-          >
-            <PhoneCall className="w-3.5 h-3.5" />
-            <span>5-Min Urgent Doctor Call</span>
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {guidanceVideos.map(vid => (
-            <div
-              key={vid.id}
-              onClick={() => setActiveVideoModal(vid)}
-              className="rounded-2xl border border-slate-200 overflow-hidden hover:border-rose-400 hover:shadow-md transition cursor-pointer group bg-slate-50 flex flex-col justify-between"
-            >
-              {/* Fake Video Screen thumbnail */}
-              <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-4 aspect-video flex flex-col justify-between text-white relative">
-                <div className="flex items-center justify-between text-[10px]">
-                  <span className="bg-white/20 backdrop-blur-xs px-2 py-0.5 rounded-full font-bold">
-                    {vid.duration}
-                  </span>
-                  <span className="bg-rose-600 text-white px-2 py-0.5 rounded-full font-bold">
-                    HD Video
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-center">
-                  <div className="w-10 h-10 rounded-full bg-rose-600/90 group-hover:bg-rose-500 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition">
-                    <Play className="w-4 h-4 fill-white ml-0.5" />
-                  </div>
-                </div>
-
-                <div className="text-[11px] font-semibold text-rose-200 truncate">
-                  {vid.instructor} ({vid.role.split('•')[0]})
-                </div>
-              </div>
-
-              {/* Video Info Body */}
-              <div className="p-3.5 bg-white space-y-2 flex-1 flex flex-col justify-between">
-                <div>
-                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border inline-block mb-1 ${vid.badgeColor}`}>
-                    {vid.tag}
-                  </span>
-                  <h4 className="text-xs font-extrabold text-slate-900 group-hover:text-rose-700 transition leading-snug">
-                    {vid.title}
-                  </h4>
-                  <p className="text-[11px] text-slate-500 mt-1 line-clamp-2 leading-relaxed">
-                    {vid.summary}
-                  </p>
-                </div>
-
-                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-rose-700 font-bold">
-                  <span>Watch Video Session</span>
-                  <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition" />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* 6. DOCTOR WHATSAPP MESSAGES & PRESCRIPTION FEED (ON DASHBOARD) */}
-      <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <div>
-            <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
-              <span>💬 Doctor WhatsApp Feed &amp; Prescriptions</span>
-              <span className="text-[10px] bg-emerald-50 text-emerald-800 font-bold px-2 py-0.5 rounded-full border border-emerald-200">
-                Official Stream
-              </span>
-            </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Verified clinical instructions and signed PDF prescriptions from Dr. Anita Rao.
-            </p>
-          </div>
-
-          <button
-            onClick={onOpenDoctorWhatsApp}
-            className="text-xs font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 cursor-pointer"
-          >
-            <span>Open Full Chat History</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        {/* WhatsApp Card Preview */}
-        <div className="bg-[#efeae2]/80 p-4 rounded-2xl border border-slate-300 space-y-3">
-          <div className="bg-white p-3.5 rounded-2xl border border-slate-200 max-w-2xl text-xs space-y-2 shadow-2xs">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-emerald-800 text-xs">
-                Dr. Anita Rao (OB/GYN) • St. Anne Mother &amp; Child Hospital
-              </span>
-              <span className="text-[10px] text-slate-400">Today, 09:15 AM</span>
-            </div>
-            <p className="text-slate-800 leading-relaxed">
-              Dear Sunita, your 28-week antenatal clinical review has been recorded. Your vital signs (BP 118/76, FHR 142 bpm) are reassuring. Please download your official digital signed prescription PDF below.
-            </p>
-
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <span className="text-xl">📄</span>
-                <div>
-                  <h4 className="font-bold text-slate-900 text-xs">Prescription_Sunita_28w.pdf</h4>
-                  <p className="text-[10px] text-slate-500">184 KB • Cryptographically signed by Dr. Anita Rao</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => alert('Downloading official signed prescription PDF: Prescription_Sunita_28w.pdf')}
-                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1 cursor-pointer"
-              >
-                <Download className="w-3 h-3" />
-                <span>Download PDF</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Timed reminder pill */}
-          <div className="bg-white p-3 rounded-2xl border border-slate-200 max-w-lg text-xs space-y-1 shadow-2xs">
-            <div className="flex items-center gap-2 text-emerald-800 font-bold text-[11px]">
-              <span>⏰ Timed Medication Reminder</span>
-              <span className="text-slate-400 font-normal">• 2:00 PM</span>
-            </div>
-            <p className="text-slate-700">
-              💊 Please take <strong>Tab Calcium Carbonate 500mg</strong> after lunch with plain water. Maintain a 2-hour interval away from your Iron tablet.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* VIDEO PLAYER MODAL (CLINICAL MASTERCLASS PLAYER) */}
+      {/* VIDEO PLAYER MODAL: embedded YouTube */}
       {activeVideoModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-3 sm:p-5 animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-2xl w-full border border-slate-200 shadow-2xl overflow-hidden animate-scaleUp">
-            {/* Modal Screen */}
-            <div className="bg-slate-950 text-white p-6 aspect-video flex flex-col justify-between relative">
-              <div className="flex items-center justify-between">
-                <span className="px-3 py-1 rounded-full bg-rose-600 text-white text-xs font-bold">
-                  St. Anne Video Guidance • {activeVideoModal.duration}
-                </span>
-                <button
-                  onClick={() => setActiveVideoModal(null)}
-                  className="p-1 rounded-full bg-white/10 hover:bg-white/20 text-white transition cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Animated Central Graphic */}
-              <div className="flex flex-col items-center justify-center space-y-2">
-                <div className="w-14 h-14 rounded-full bg-rose-600 text-white flex items-center justify-center shadow-xl animate-pulse">
-                  <Play className="w-6 h-6 fill-white ml-1" />
-                </div>
-                <div className="text-center">
-                  <h3 className="text-base font-extrabold text-white">{activeVideoModal.title}</h3>
-                  <p className="text-xs text-rose-300 font-medium">{activeVideoModal.instructor} • {activeVideoModal.role}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between text-xs text-slate-400">
-                <span>Continuum Maternal Masterclass</span>
-                <span className="text-rose-400 font-bold">Playing 1080p Stream</span>
-              </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-3 sm:p-5" onClick={() => setActiveVideoModal(null)}>
+          <div className="bg-white rounded-3xl max-w-3xl w-full border border-slate-200 shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="aspect-video bg-black">
+              <iframe
+                className="w-full h-full"
+                src={`https://www.youtube-nocookie.com/embed/${activeVideoModal.youtubeId}?autoplay=1&rel=0`}
+                title={activeVideoModal.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
             </div>
-
-            {/* Modal Content */}
-            <div className="p-6 space-y-4 text-xs">
+            <div className="p-5 space-y-3 text-xs">
               <div>
-                <span className="text-[10px] font-extrabold uppercase bg-rose-50 text-rose-700 px-2 py-0.5 rounded border border-rose-200">
-                  Clinical Summary
-                </span>
-                <p className="text-slate-700 text-xs sm:text-sm mt-1 leading-relaxed">
-                  {activeVideoModal.summary}
-                </p>
+                <h3 className="text-sm font-extrabold text-slate-900">{activeVideoModal.title}</h3>
+                <p className="text-slate-500 mt-0.5">{activeVideoModal.instructor} · {activeVideoModal.role}{activeVideoModal.role.includes('Cloudnine') ? '' : ' · Cloudnine Hospitals'}</p>
+                <p className="text-slate-700 mt-2">{activeVideoModal.summary}</p>
               </div>
-
-              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
-                <span className="font-extrabold text-slate-900 block text-xs">
-                  Key Takeaway Points for Sunita:
-                </span>
-                <ul className="space-y-1.5 text-slate-700">
-                  {activeVideoModal.keyPoints.map((kp, idx) => (
-                    <li key={idx} className="flex items-start gap-2">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                      <span>{kp}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveVideoModal(null);
-                    onOpenTeleCounselling();
-                  }}
-                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
-                >
-                  <PhoneCall className="w-3.5 h-3.5" />
-                  <span>Have questions? Ask Dr. Anita Rao</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveVideoModal(null)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer"
-                >
-                  Close
-                </button>
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-100">
+                <a
+                  href={`https://www.youtube.com/watch?v=${activeVideoModal.youtubeId}`}
+                  target="_blank" rel="noreferrer"
+                  className="text-rose-700 font-bold hover:underline"
+                >Watch on YouTube ↗</a>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => { setActiveVideoModal(null); onOpenTeleCounselling(); }}
+                    className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold flex items-center gap-1.5 transition cursor-pointer"
+                  >
+                    <PhoneCall className="w-3.5 h-3.5" /> Ask your doctor
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveVideoModal(null)}
+                    className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition cursor-pointer"
+                  >Close</button>
+                </div>
               </div>
             </div>
           </div>

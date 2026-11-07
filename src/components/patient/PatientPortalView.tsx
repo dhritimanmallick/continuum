@@ -45,6 +45,8 @@ import { AbhaHealthLockerPanel } from './AbhaHealthLockerPanel';
 import { CultPatientDashboard } from './CultPatientDashboard';
 import { AbhaMultiHospitalConsentModal } from './AbhaMultiHospitalConsentModal';
 import { PortalSidebarLayout } from '../layout/PortalSidebarLayout';
+import { CareFinderPanel } from './CareFinderPanel';
+import { NearbyCareMap } from '../vicinity/NearbyCareMap';
 
 interface PatientPortalViewProps {
   currentUser: AuthUser;
@@ -114,15 +116,15 @@ export const PatientPortalView: React.FC<PatientPortalViewProps> = ({
         <div className="bg-gradient-to-r from-rose-950 via-slate-900 to-purple-950 text-white px-4 sm:px-6 py-2 text-xs flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="font-semibold text-rose-200">Continuum Healthcare Network</span>
+            <span className="font-semibold text-rose-200">Vyuhaa Continuum</span>
             <span className="text-slate-400 hidden sm:inline">• Vicinity Hospitals, Diagnostic Labs &amp; Unified ABHA Storage</span>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3 whitespace-nowrap">
             <div className="flex items-center gap-1.5 text-amber-300 bg-amber-950/70 border border-amber-600/50 px-2.5 py-0.5 rounded-full font-bold text-[11px]">
               <Phone className="w-3 h-3 text-amber-400" />
-              <span className="hidden sm:inline">24x7 Maternity Helpline: 080-2211-9999</span>
-              <span className="sm:hidden">Helpline 080-2211-9999</span>
+              <span className="hidden sm:inline">24x7 Care Line: 080-2211-9999</span>
+              <span className="sm:hidden">Care Line 080-2211-9999</span>
             </div>
             <a 
               href="tel:108"
@@ -146,7 +148,7 @@ export const PatientPortalView: React.FC<PatientPortalViewProps> = ({
             <div className="hidden sm:block h-6 w-px bg-slate-200" />
             <div className="hidden sm:block">
               <div className="text-xs font-bold text-slate-900 tracking-tight flex items-center gap-1.5">
-                <span>Continuum</span>
+                <span>Vyuhaa Continuum</span>
                 <span className="px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 text-[10px] font-extrabold uppercase">
                   Patient &amp; Family
                 </span>
@@ -234,32 +236,32 @@ export const PatientPortalView: React.FC<PatientPortalViewProps> = ({
                 {patient.isPregnant && patient.pregnancyDetails?.gestationalAgeWeeks ? `Week ${patient.pregnancyDetails.gestationalAgeWeeks}` : 'My health'}
               </div>
               <div className="text-sm font-extrabold text-slate-900 truncate">{patient.name}</div>
-              <div className="text-[11px] text-slate-500 truncate">{patient.assignedDoctor || 'Dr. Anita Rao'} · St. Anne</div>
+              <div className="text-[11px] text-slate-500 truncate">Primary doctor: {patient.assignedDoctor || 'Dr. Anita Rao'}</div>
             </div>
           }
           groups={[
             { heading: 'My care', items: [
-              { id: 'OVERVIEW', label: 'Dashboard', icon: Heart },
+              { id: 'OVERVIEW', label: 'Home', icon: Heart },
               { id: 'MY_SCHEDULE', label: 'My Schedule', icon: CalendarDays },
               { id: 'VACCINES_TESTS', label: 'Vaccinations & Tests', icon: Syringe },
               { id: 'CARE_JOURNEY', label: 'My Care Journey', icon: Award },
               { id: 'NOTIFICATIONS', label: 'Notifications', icon: Bell },
             ]},
-            { heading: 'My doctor & records', items: [
+            { heading: 'Find care', items: [
+              { id: 'DOCTORS_ESTIMATES', label: 'Consult a Doctor', icon: Stethoscope },
+              { id: 'COSTS', label: 'Costs & Procedures', icon: Calculator },
+              { id: 'VICINITY_MAP', label: 'Nearby on Map', icon: MapPin },
+              { id: 'TELE_COUNSELLING', label: '5-Min Doctor Call', icon: PhoneCall },
+            ]},
+            { heading: 'My records', items: [
               { id: 'WHATSAPP_FEED', label: 'Doctor WhatsApp', icon: MessageCircle },
               { id: 'ABHA_RECORDS', label: 'ABHA Health Locker', icon: ShieldCheck },
               { id: 'consents', label: 'Hospital Consents', icon: Building2, onClick: () => setShowConsentManager(true) },
-              { id: 'DOCTORS_ESTIMATES', label: 'Doctors & Booking', icon: Stethoscope },
-              { id: 'TELE_COUNSELLING', label: '5-Min Doctor Call', icon: PhoneCall },
             ]},
-            { heading: 'Pregnancy & delivery', items: [
+            { heading: 'Pregnancy & family', items: [
               { id: 'LABOUR_TRACKER', label: 'Labour Live Tracker', icon: Baby },
               { id: 'LIBRARY_AI', label: 'Library & AI Counsellor', icon: BookOpen },
-            ]},
-            { heading: 'Family & costs', items: [
               { id: 'FAMILY', label: 'Family Circle', icon: Users, badge: familyMembers.length },
-              { id: 'COSTS', label: 'Treatment Costs', icon: Calculator },
-              { id: 'VICINITY_MAP', label: 'Nearby Labs & Pharmacies', icon: MapPin },
             ]},
           ]}
           footer={
@@ -312,17 +314,7 @@ export const PatientPortalView: React.FC<PatientPortalViewProps> = ({
 
         {/* TAB: DOCTORS & ESTIMATES */}
         {activeTab === 'DOCTORS_ESTIMATES' && (
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
-            <DoctorChooserAndEstimatesPanel
-              patient={patient}
-              onBookDoctor={(doctorId) => {
-                setActiveTab('MY_SCHEDULE');
-              }}
-              onRequestQuoteWhatsApp={() => {
-                setShowWhatsAppModal(true);
-              }}
-            />
-          </div>
+          <CareFinderPanel mode="consult" onAskDoctor={() => setActiveTab('WHATSAPP_FEED')} />
         )}
 
         {/* TAB: MY SCHEDULES */}
@@ -395,24 +387,11 @@ export const PatientPortalView: React.FC<PatientPortalViewProps> = ({
 
         {/* TAB 3: TREATMENT COSTS */}
         {activeTab === 'COSTS' && (
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
-            <TreatmentCostEstimatorModal
-              initialPatientId={patient.id}
-              onClose={() => setActiveTab('OVERVIEW')}
-            />
-          </div>
+          <CareFinderPanel mode="costs" onAskDoctor={() => setActiveTab('WHATSAPP_FEED')} />
         )}
 
         {/* TAB 3B: GOOGLE MAPS VICINITY TRACKER & COST CHOOSER */}
-        {activeTab === 'VICINITY_MAP' && (
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
-            <GoogleMapsVicinityTracker
-              patientId={patient.id}
-              patientName={patient.name}
-              patientPhone={patient.phone}
-            />
-          </div>
-        )}
+        {activeTab === 'VICINITY_MAP' && <NearbyCareMap />}
 
         {/* TAB 4: TELE COUNSELLING */}
         {activeTab === 'TELE_COUNSELLING' && (

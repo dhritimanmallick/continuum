@@ -62,6 +62,8 @@ export const OpdNavbar: React.FC<OpdNavbarProps> = ({
   const [showApkModal, setShowApkModal] = useState(false);
   const currentUser = authService.getCurrentUser();
   const allUsers = authService.getUsers().filter(u => u.role !== 'PATIENT');
+  // The vicinity network (ONDC order intake) is not part of the doctor's workspace
+  const isDoctorContext = (currentPortal === 'OPD' && currentRole === 'DOCTOR') || authService.getCurrentUser()?.role === 'DOCTOR';
   const currentDoctor = opdStore.getCurrentDoctor();
   const facility = opdStore.getHospitalFacility();
 
@@ -378,6 +380,7 @@ export const OpdNavbar: React.FC<OpdNavbarProps> = ({
           </button>
 
           {/* Portal 4: Vicinity Radar & Order Intake */}
+          {!isDoctorContext && (
           <button
             onClick={() => {
               onPortalChange('VICINITY');
@@ -395,6 +398,7 @@ export const OpdNavbar: React.FC<OpdNavbarProps> = ({
               ONDC
             </span>
           </button>
+          )}
 
           {/* Portal 5: Doctor Revenue Attribution */}
           <button
