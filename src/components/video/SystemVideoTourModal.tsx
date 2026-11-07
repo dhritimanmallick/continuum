@@ -42,6 +42,11 @@ import { PharmaView } from '../opd/PharmaView';
 import { LabView } from '../opd/LabView';
 import { DoctorWhatsAppMessagesFeed } from '../patient/DoctorWhatsAppMessagesFeed';
 import { MyCareJourneyPanel } from '../opd/MyCareJourneyPanel';
+import { 
+  multiHospitalConsentService, 
+  VICINITY_HEALTH_CENTERS, 
+  AbhaHospitalConsent 
+} from '../../services/multiHospitalConsentService';
 
 interface SystemVideoTourModalProps {
   isOpen: boolean;
@@ -86,35 +91,35 @@ export const FIVE_PRODUCT_CHAPTERS: VideoChapter[] = [
   {
     id: 'ch_patient_portal',
     number: 1,
-    title: 'Pillar 1: Patient Portal — Clean Minimalist UI & Top Instant Booking',
-    shortTitle: '1. Patient Booking UI',
+    title: 'Pillar 1: Patient Portal — Multi-Hospital Booking & Minimalist UI',
+    shortTitle: '1. Multi-Hospital Booking',
     portalBadge: 'Patient Portal',
     personaName: 'Sunita Das',
-    personaRole: 'Expectant Mother (28w Gestation, PAT-104) • Individual Login',
+    personaRole: 'Expectant Mother (28w Gestation, PAT-104) • Multi-Hospital Choice',
     personaAvatar: '🤰',
     themeColor: 'from-rose-950 via-slate-900 to-pink-950',
     accentBorder: 'border-rose-500/50',
     startSec: 0,
     durationSec: 60,
-    currentInteractionLabel: '✨ Live Patient UI: Top Instant Booking Bar • Up-Next 12 Nov Care Schedule • Vicinity Path Labs',
+    currentInteractionLabel: '✨ Live Patient UI: Choose ANY Vicinity Health Center • Top Quick Booking • Transparent PM-JAY Policy',
     highlightUSPs: [
-      'Top Quick Booking: 10-second booking for Doctor OPD, Path Lab, ONDC Medicines & 5-Min Video',
+      'Multi-Hospital Vicinity Selection: Book with ANY medical center (St. Anne, Apollo Cradle, Fortis La Femme, Cloudnine, Motherhood, Manipal)',
+      'Top Quick Booking: 10-second booking for Doctor OPD, Path Lab, ONDC Medicines & 5-Min Video Call',
       'Right-on-Dashboard Schedules: Confirmed 12 Nov Antenatal Review & Fasting 75g OGTT Blood Test',
-      'Find Near You in Vicinity: Accredited Pathology Labs (Apex, Metropolis), Doctors & ONDC Pharmacies',
-      'Accurate PM-JAY Policy: Inpatient Delivery 100% Cashless under JSSK & PM-JAY | OPD Out-of-Pocket'
+      'Accurate PM-JAY Policy: Inpatient Delivery 100% Cashless under JSSK & PM-JAY | Routine OPD Out-of-Pocket'
     ],
-    narrationEn: 'Welcome to Continuum. For patients, the interface is light, simple, and intuitive. Right at the top of the dashboard, patients can book appointments in ten seconds for doctors, pathology labs, or ONDC medicines. Their upcoming schedule for November 12th is clearly visible, along with accredited local labs and clear PM-JAY policy guidance, where inpatient deliveries are 100% cashless while outpatient visits are paid out-of-pocket.',
-    narrationHi: 'कॉन्टिनम में आपका स्वागत है। मरीजों के लिए यह इंटरफेस सरल, हल्का और सहज है। डैशबोर्ड के शीर्ष पर मरीज 10 सेकंड में डॉक्टर, पैथोलॉजी लैब या ओएनडीसी दवाएं बुक कर सकते हैं। उनका 12 नवंबर का शेड्यूल तुरंत दिखाई देता है, और योजना के तहत डिलीवरी पूरी तरह कैशलेस है।',
+    narrationEn: 'Welcome to Continuum. For patients, the interface is clean, light, and empowers complete freedom of choice. The patient is never locked into one hospital: right on the dashboard, Sunita can select and book with any medical center in her vicinity—from St. Anne and Apollo Cradle to Fortis La Femme or Cloudnine. The top quick-booking bar arranges OPD visits, pathology tests, and ONDC generic medicines in ten seconds, with transparent PM-JAY policy guidance where inpatient deliveries are completely cashless under JSSK while outpatient visits are paid out-of-pocket.',
+    narrationHi: 'कॉन्टिनम में आपका स्वागत है। मरीजों के लिए यह इंटरफेस सरल, हल्का और पूरी तरह स्वतंत्र है। मरीज किसी एक अस्पताल तक सीमित नहीं है: डैशबोर्ड पर सुनीता सेंट ऐन, अपोलो क्रैडल या फोर्टिस ला फेम जैसे अपने पास के किसी भी स्वास्थ्य केंद्र को चुनकर बुकिंग कर सकती हैं। शीर्ष पर स्थित क्विक-बुकिंग बार से दस सेकंड में डॉक्टर, पैथोलॉजी टेस्ट या ओएनडीसी दवाएं बुक हो जाती हैं, और जेएसएसके के तहत डिलीवरी पूरी तरह कैशलेस है।',
     associatedUserId: 'user-patient-sunita',
     segments: [
       {
         id: 'seg_1_1',
         segmentStartSec: 0,
         durationSec: 20,
-        captionTitle: 'Clean Minimalist UI & Top Quick Booking Bar',
-        activeFeatureHighlight: 'Top Quick Booking Bar: Doctor OPD, Pathology Labs, ONDC Medicines & 5-Min Urgent Doctor Call',
-        textEn: 'Welcome to Continuum. For patients, the interface is designed to be clean, light, and focused. Right at the top of the dashboard, the quick-booking bar enables patients to book appointments in under ten seconds—whether consulting an OB-GYN, scheduling a pathology test, or ordering generic medicines.',
-        textHi: 'कॉन्टिनम में आपका स्वागत है। मरीजों के लिए यह इंटरफेस सरल, हल्का और सहज है। डैशबोर्ड के शीर्ष पर स्थित क्विक-बुकिंग बार से मरीज दस सेकंड में डॉक्टर परामर्श, पैथोलॉजी टेस्ट या जेनेरिक दवाएं बुक कर सकते हैं।'
+        captionTitle: 'Multi-Hospital Selection & Top Quick Booking Bar',
+        activeFeatureHighlight: 'Multi-Hospital Vicinity Bar: Choose between 6 accredited centers (St. Anne, Apollo Cradle, Fortis, Cloudnine, etc.)',
+        textEn: 'Welcome to Continuum. The patient interface is designed to be clean, intuitive, and patient-first. Sunita is not restricted to any single clinic; she can select from any health center in her vicinity, comparing driving distance, specialist fees, and delivery package estimates directly from the top booking bar.',
+        textHi: 'कॉन्टिनम में आपका स्वागत है। मरीज का इंटरफेस सहज, हल्का और पारदर्शी है। सुनीता किसी एक अस्पताल से बंधी नहीं हैं; वह अपने पास के सभी 6 मान्यता प्राप्त अस्पतालों की दूरी, फीस और डिलीवरी खर्च की तुलना करके सीधे बुकिंग कर सकती हैं।'
       },
       {
         id: 'seg_1_2',
@@ -122,8 +127,8 @@ export const FIVE_PRODUCT_CHAPTERS: VideoChapter[] = [
         durationSec: 20,
         captionTitle: 'Right-on-Dashboard Care Schedules & Transparent Policy',
         activeFeatureHighlight: 'Confirmed 12 Nov Care Schedule: Antenatal Review (10:30 AM) & Fasting 75g OGTT (08:00 AM)',
-        textEn: 'Directly below the booking bar, upcoming appointments are front and center. Sunita can view her confirmed antenatal review and fasting blood glucose test scheduled for November 12th. Notice the clear policy notice: inpatient maternity care is completely cashless under JSSK and PM-JAY, while routine outpatient visits are paid transparently.',
-        textHi: 'बुकिंग बार के नीचे आने वाले चेकअप तुरंत दिखाई देते हैं। सुनीता अपना 12 नवंबर का एंटीनेटल रिव्यू और फास्टिंग टेस्ट देख सकती हैं। नीति के अनुसार जेएसएसके और पीएम-जेएवाई के तहत डिलीवरी पूरी तरह कैशलेस है, जबकि ओपीडी का भुगतान पारदर्शी रूप से मरीज करते हैं।'
+        textEn: 'Right below the booking bar, upcoming care appointments are front and center. Sunita can view her confirmed antenatal review and fasting oral glucose test scheduled for November 12th. Notice the clear policy notice: inpatient maternity care is completely cashless under JSSK and PM-JAY, while outpatient visits are paid transparently.',
+        textHi: 'बुकिंग बार के ठीक नीचे आने वाले चेकअप तुरंत दिखाई देते हैं। सुनीता 12 नवंबर का एंटीनेटल रिव्यू और फास्टिंग टेस्ट देख सकती हैं। नीति के अनुसार जेएसएसके और पीएम-जेएवाई के तहत प्रसव पूरी तरह कैशलेस है, जबकि ओपीडी का भुगतान पारदर्शी रूप से मरीज करते हैं।'
       },
       {
         id: 'seg_1_3',
@@ -139,60 +144,60 @@ export const FIVE_PRODUCT_CHAPTERS: VideoChapter[] = [
   {
     id: 'ch_patient_usps',
     number: 2,
-    title: 'Patient USPs: WhatsApp Prescriptions, Care Pathway & Video Library',
-    shortTitle: '2. Patient USPs & WhatsApp',
-    portalBadge: 'Patient USPs',
+    title: 'Pillar 2: Constant ABHA Data Storage & Federated Multi-Hospital Consent',
+    shortTitle: '2. Constant ABHA & Consent',
+    portalBadge: 'ABHA & Patient USPs',
     personaName: 'Sunita Das',
-    personaRole: 'Individual Patient & Family Account • PAT-104',
-    personaAvatar: '💬',
+    personaRole: 'Individual Patient & Family Account • ABHA ID: 91-8842-1049-2311@abdm',
+    personaAvatar: '🔒',
     themeColor: 'from-emerald-950 via-slate-900 to-teal-950',
     accentBorder: 'border-emerald-500/50',
     startSec: 60,
     durationSec: 60,
-    currentInteractionLabel: '✨ Patient USPs: Real-time WhatsApp Prescription PDF • My Care Journey Milestones • Curated Video Masterclasses',
+    currentInteractionLabel: '✨ Constant ABHA Storage: Unified FHIR Records • Federated Consent Manager • WhatsApp Prescription PDF',
     highlightUSPs: [
-      'Personalized Care Pathway ("My Care Journey"): Continuity achievements for all OPD patient types (Pregnancy, Gynae, PCOS, Screening)',
+      'Constant Longitudinal Data Storage: All health data remains permanently tied to her personal ABHA ID (91-8842-1049-2311@abdm)',
+      'Federated ABHA Consent Manager: Patient grants or revokes access to any hospital with 1 click; no hospital locks data into a silo',
       'Real-Time WhatsApp Updates: Instant signed digital prescription PDF download and timed medication reminders (2:00 PM Tab Calcium)',
-      'Clinical Video Guidance Masterclasses: Short 3–5 min video classes on 3rd trimester nutrition, OGTT test prep & labour signs',
-      'Gemini-Grounded Medical AI Counsellor: Grounded in approved medical literature (FOGSI, RCOG, WHO)'
+      'Universal Care Pathway ("My Care Journey"): Continuity achievements for all OPD patient types (Pregnancy, Gynae, PCOS, Screening)'
     ],
-    narrationEn: 'Patients experience three unique USPs. First, My Care Journey rewards continuity of care across all patient types, including gynaecology and preventive screening. Second, patients receive real-time WhatsApp updates from their doctor, including downloadable digital prescription PDFs and timed dosage reminders. Third, the dashboard embeds curated video masterclasses and grounded AI guidance for personalized care at every stage.',
-    narrationHi: 'मरीजों के लिए तीन प्रमुख विशेषताएं हैं। पहला, माई केयर जर्नी सभी प्रकार के मरीजों के लिए निरंतरता को पुरस्कृत करती है। दूसरा, मरीज को डॉक्टर से व्हाट्सएप पर डिजिटल पर्चा और सही समय पर दवा लेने के निर्देश मिलते हैं। तीसरा, डैशबोर्ड में क्लिनिकल वीडियो और एआई मार्गदर्शन शामिल है।',
+    narrationEn: 'A fundamental breakthrough in Continuum is constant data storage. Her longitudinal medical data is stored permanently under her personal ABHA ID, rather than in separate hospital silos. Through the Federated ABHA Consent Manager, Sunita grants or revokes access to St. Anne, Apollo Cradle, or Fortis with a single click. When consent is granted, doctors at any hospital see her full medical history, and she receives her signed digital prescriptions directly via WhatsApp.',
+    narrationHi: 'कॉन्टिनम की सबसे बड़ी विशेषता है निरंतर डेटा भंडारण। मरीज का पूरा मेडिकल रिकॉर्ड किसी एक अस्पताल के बजाय उसकी व्यक्तिगत आभा आईडी के तहत सुरक्षित रहता है। फेडेरेटेड आभा कंसेंट मैनेजर से सुनीता सेंट ऐन, अपोलो या फोर्टिस को एक क्लिक में अनुमति दे या हटा सकती हैं। अनुमति मिलने पर कोई भी डॉक्टर पुराना रिकॉर्ड देख सकता है, और पर्चा सीधे व्हाट्सएप पर मिलता है।',
     associatedUserId: 'user-patient-sunita',
     segments: [
       {
         id: 'seg_2_1',
         segmentStartSec: 0,
         durationSec: 20,
-        captionTitle: 'Personalized Care Pathway — Universal Continuity Milestones',
-        activeFeatureHighlight: 'My Care Journey: Universal milestones across Pregnancy, Gynaecology, PCOS and Preventive Screenings',
-        textEn: 'Next, we explore three unique patient-centric USPs. The first is My Care Journey, which structures longitudinal milestones not just for pregnancy, but across gynaecology, PCOS management, and preventive screening. Patients earn milestones for timely checkups and adherence.',
-        textHi: 'अब हम तीन प्रमुख मरीज-केंद्रित विशेषताओं को देखते हैं। पहली है माई केयर जर्नी, जो गर्भावस्था के साथ-साथ स्त्री रोग, पीसीओएस और नियमित जांच के लिए मील के पत्थर तय करती है और समय पर चेकअप को प्रोत्साहित करती है।'
+        captionTitle: 'Constant Longitudinal Data Storage under Personal ABHA ID',
+        activeFeatureHighlight: 'Unified ABDM FHIR Storage: Constant repository tied to ABHA ID 91-8842-1049-2311@abdm',
+        textEn: 'Sunita\'s medical records remain constant and permanent under her personal ABHA ID. Whether she visits St. Anne Hospital, Apollo Cradle, or an independent diagnostic lab, every blood report, ultrasound, and prescription is archived in one unified, longitudinal health repository.',
+        textHi: 'सुनीता का मेडिकल रिकॉर्ड उसकी व्यक्तिगत आभा आईडी के तहत स्थायी रूप से सुरक्षित रहता है। चाहे वह सेंट ऐन जाएं, अपोलो क्रैडल या किसी स्वतंत्र लैब में, हर रिपोर्ट और पर्चा एक ही एकीकृत रिपोजिटरी में संचित रहता है।'
       },
       {
         id: 'seg_2_2',
         segmentStartSec: 20,
         durationSec: 20,
-        captionTitle: 'Real-Time WhatsApp Prescriptions & Timed Dosage Alerts',
-        activeFeatureHighlight: 'Doctor WhatsApp Feed: Downloadable signed prescription PDF and timed dosage alerts (2:00 PM Tab Calcium)',
-        textEn: 'The second major USP is the real-time WhatsApp stream feed. Directly after an OPD consultation, Sunita receives an instant WhatsApp alert containing her digitally signed prescription PDF and timed dosage reminders, such as taking Calcium tablets at 2:00 PM.',
-        textHi: 'दूसरी महत्वपूर्ण विशेषता है रियल-टाइम व्हाट्सएप फीड। परामर्श के तुरंत बाद सुनीता को व्हाट्सएप पर डॉक्टर का डिजिटल हस्ताक्षरित पर्चा और दवा का सही समय, जैसे दोपहर 2 बजे कैल्शियम लेने का अलर्ट मिलता है।'
+        captionTitle: 'Federated ABHA Multi-Hospital Consent Manager',
+        activeFeatureHighlight: 'Consent Governance: Patient grants or revokes access per hospital with 1-click ABDM consent artifacts',
+        textEn: 'Data access is controlled entirely by the patient. In the Federated ABHA Consent Manager, Sunita can grant or revoke data access for any hospital in seconds. Hospitals must request consent, ensuring zero proprietary lock-in and complete interoperability across all providers.',
+        textHi: 'डेटा का पूर्ण नियंत्रण मरीज के हाथ में है। फेडेरेटेड आभा कंसेंट मैनेजर में सुनीता किसी भी अस्पताल की अनुमति एक क्लिक में दे सकती हैं या वापस ले सकती हैं। अस्पतालों को डेटा देखने के लिए सहमति लेनी होती है, जिससे डेटा किसी एक जगह बंद नहीं रहता।'
       },
       {
         id: 'seg_2_3',
         segmentStartSec: 40,
         durationSec: 20,
-        captionTitle: 'Clinical Video Masterclasses & Grounded AI Guidance',
-        activeFeatureHighlight: 'Curated Clinical Videos: 3rd Trimester Nutrition, 75g OGTT Prep & FOGSI Grounded AI',
-        textEn: 'The third USP brings clinical guidance directly onto the dashboard. Patients can watch short, three-minute curated masterclasses covering third-trimester nutrition, glucose test preparation, and signs of labour, alongside our FOGSI-grounded medical AI counsellor.',
-        textHi: 'तीसरी विशेषता है डैशबोर्ड पर उपलब्ध क्लिनिकल वीडियो। मरीज पोषण, ग्लूकोज टेस्ट की तैयारी और प्रसव के लक्षणों पर 3 मिनट के संक्षिप्त वीडियो देख सकते हैं, साथ ही स्वीकृत मेडिकल एआई से सलाह ले सकते हैं।'
+        captionTitle: 'Real-Time WhatsApp Prescriptions & Care Journey Milestones',
+        activeFeatureHighlight: 'WhatsApp Feed & Care Pathway: Downloadable signed prescription PDF and timed dosage alerts',
+        textEn: 'Directly after each consultation, Sunita receives an instant WhatsApp alert containing her digitally signed prescription PDF and timed dosage reminders, such as taking Calcium tablets at two PM, while My Care Journey tracks her continuity milestones.',
+        textHi: 'प्रत्येक परामर्श के बाद सुनीता को व्हाट्सएप पर डॉक्टर का डिजिटल हस्ताक्षरित पर्चा और दोपहर दो बजे कैल्शियम लेने का रिमाइंडर मिलता है, साथ ही माई केयर जर्नी से उनकी देखभाल के अगले चरण ट्रैक होते हैं।'
       }
     ]
   },
   {
     id: 'ch_doctor_gist',
     number: 3,
-    title: 'Doctor Station: 10-Second Patient Gist, Vitals & ABHA Prior Records',
+    title: 'Pillar 3: OPD Doctor Station — 10-Second Patient Gist & ABHA Records Pull',
     shortTitle: '3. Doctor Pre-Session Gist',
     portalBadge: 'OPD Doctor Station',
     personaName: 'Dr. Anita Rao',
@@ -202,10 +207,10 @@ export const FIVE_PRODUCT_CHAPTERS: VideoChapter[] = [
     accentBorder: 'border-rose-400/50',
     startSec: 120,
     durationSec: 60,
-    currentInteractionLabel: '✨ Doctor Gist: 10-Sec Pre-Session Summary • Vitals BP 118/76, FHR 142 bpm • 1-Click ABHA Records Pull',
+    currentInteractionLabel: '✨ Doctor Gist: 10-Sec Pre-Session Summary • Vitals BP 118/76, FHR 142 bpm • Multi-Hospital ABHA Records Pull',
     highlightUSPs: [
       '10-Second Pre-Session Clinical Gist: Instant summary of parity (G2P1), gestational age (28w), vitals & red flags before consultation begins',
-      'One-Click ABDM / ABHA Longitudinal Prior Medical Records: Pulls historic records across disparate clinics without waiting for paper files',
+      'Federated ABDM / ABHA Longitudinal Prior Medical Records: Pulls records across all consented hospitals in her network',
       'Clinical Red-Flag Detection: Mild Anemia alert (Hb 10.2 g/dL) and Rh-Negative Antenatal Care precautions',
       'Streamlined Queue: One-click "Start Consultation" with real-time patient queue status in Room 4'
     ],
@@ -226,10 +231,10 @@ export const FIVE_PRODUCT_CHAPTERS: VideoChapter[] = [
         id: 'seg_3_2',
         segmentStartSec: 20,
         durationSec: 20,
-        captionTitle: 'One-Click Longitudinal ABHA Prior Medical Records',
+        captionTitle: 'Federated Multi-Hospital Longitudinal ABHA Records Pull',
         activeFeatureHighlight: 'ABDM Gateway: Instant pull of verified ultrasound scans, blood tests & discharge summaries across hospitals',
-        textEn: 'With a single click on the ABHA button, Dr. Rao retrieves longitudinal prior medical records across different hospitals and clinics via the national health gateway. Historical ultrasound scans, previous lab reports, and allergy profiles appear instantly without handling physical papers.',
-        textHi: 'आभा बटन पर सिर्फ एक क्लिक से डॉ. राव राष्ट्रीय स्वास्थ्य गेटवे के जरिए अन्य अस्पतालों के पुराने रिकॉर्ड लोड कर लेती हैं। पिछले अल्ट्रासाउंड, खून की जांच और एलर्जी का इतिहास बिना किसी कागजी देरी के तुरंत मिल जाता है।'
+        textEn: 'With a single click on the ABHA button, Dr. Rao retrieves longitudinal prior medical records across different hospitals and clinics via the national health gateway under Sunita\'s active consent. Historical ultrasound scans, previous lab reports, and allergy profiles appear instantly without handling physical papers.',
+        textHi: 'आभा बटन पर सिर्फ एक क्लिक से डॉ. राव राष्ट्रीय स्वास्थ्य गेटवे के जरिए मरीज की सहमति से अन्य अस्पतालों के पुराने रिकॉर्ड लोड कर लेती हैं। पिछले अल्ट्रासाउंड, खून की जांच और एलर्जी का इतिहास बिना किसी कागजी देरी के तुरंत मिल जाता है।'
       },
       {
         id: 'seg_3_3',
@@ -367,6 +372,8 @@ export const SystemVideoTourModal: React.FC<SystemVideoTourModalProps> = ({
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
   const [exportSuccessMessage, setExportSuccessMessage] = useState<string | null>(null);
+  const [showExportDialog, setShowExportDialog] = useState(false);
+  const [exportedVideoUrl, setExportedVideoUrl] = useState<string | null>(null);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -672,10 +679,10 @@ export const SystemVideoTourModal: React.FC<SystemVideoTourModalProps> = ({
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 15px Inter, sans-serif';
     if (scene.id === 'ch_patient_portal') {
-      ctx.fillText('Clean Patient Portal Dashboard', w - 460, 275);
+      ctx.fillText('Multi-Hospital Vicinity Booking', w - 460, 275);
       ctx.fillStyle = '#f43f5e';
       ctx.font = 'bold 13px Inter, sans-serif';
-      ctx.fillText('⚡ Top Instant Booking: Doctor / Lab / ONDC / Video', w - 460, 305);
+      ctx.fillText('⚡ 6 Vicinity Centers: St. Anne, Apollo, Fortis...', w - 460, 305);
       ctx.fillStyle = '#38bdf8';
       ctx.fillText('📅 Next OPD: 12 Nov 10:30 AM (Dr. Anita Rao)', w - 460, 335);
       ctx.fillStyle = '#c084fc';
@@ -684,16 +691,16 @@ export const SystemVideoTourModal: React.FC<SystemVideoTourModalProps> = ({
       ctx.font = '12px Inter, sans-serif';
       ctx.fillText('JSSK Delivery: ₹0 Cashless | OPD: Out-of-Pocket', w - 460, 395);
     } else if (scene.id === 'ch_patient_usps') {
-      ctx.fillText('Patient Health USPs & Feeds', w - 460, 275);
+      ctx.fillText('Constant Data & Federated ABHA Consent', w - 460, 275);
       ctx.fillStyle = '#10b981';
-      ctx.fillText('💬 WhatsApp: Prescription_Sunita_28w.pdf', w - 460, 305);
+      ctx.fillText('🔒 ABHA ID: 91-8842-1049-2311@abdm (Constant)', w - 460, 305);
       ctx.fillStyle = '#f59e0b';
-      ctx.fillText('🌟 My Care Journey: Universal Continuity Rewards', w - 460, 335);
+      ctx.fillText('🏥 Federated Consent: St. Anne, Apollo, Fortis', w - 460, 335);
       ctx.fillStyle = '#38bdf8';
-      ctx.fillText('📹 Clinical Video Guide: 3rd Trimester Nutrition & OGTT', w - 460, 365);
+      ctx.fillText('💬 WhatsApp: Prescription_Sunita_28w.pdf', w - 460, 365);
       ctx.fillStyle = '#a855f7';
       ctx.font = '12px Inter, sans-serif';
-      ctx.fillText('Gemini AI Counsellor grounded in FOGSI & WHO', w - 460, 395);
+      ctx.fillText('Patient Owns Records • 1-Click Consent Toggle', w - 460, 395);
     } else if (scene.id === 'ch_doctor_gist') {
       ctx.fillText('OPD Manager: Pre-Session Gist', w - 460, 275);
       ctx.fillStyle = '#f43f5e';
@@ -701,7 +708,7 @@ export const SystemVideoTourModal: React.FC<SystemVideoTourModalProps> = ({
       ctx.fillStyle = '#10b981';
       ctx.fillText('Vitals: BP 118/76 mmHg • FHR 142 bpm', w - 460, 335);
       ctx.fillStyle = '#38bdf8';
-      ctx.fillText('One-Click ABHA Prior Records: 5 FHIR Linked', w - 460, 365);
+      ctx.fillText('Multi-Hospital ABHA Records: 5 FHIR Linked', w - 460, 365);
       ctx.fillStyle = '#ef4444';
       ctx.font = '12px Inter, sans-serif';
       ctx.fillText('Red Flag Alert: Mild Anemia Hb 10.2 g/dL', w - 460, 395);
@@ -782,31 +789,38 @@ export const SystemVideoTourModal: React.FC<SystemVideoTourModalProps> = ({
     };
   }, [isOpen, currentMasterSec, currentScene, drawVideoFrameToCanvas]);
 
-  // Video Export & Download Function (Rock-Solid WebM & Canvas Capture Engine)
-  const handleExportSingleVideo = async () => {
+  // Start WebM Video Recording on Active Visible Canvas
+  const startRecordingFrames = async () => {
     const canvas = canvasRef.current;
     if (!canvas) {
-      alert('Video canvas is initializing. Please try again.');
+      console.warn('Canvas not yet initialized');
       return;
     }
 
     setIsExporting(true);
     setExportProgress(5);
     setExportSuccessMessage(null);
+    setExportedVideoUrl(null);
 
     try {
       let mimeType = 'video/webm;codecs=vp9';
-      if (!MediaRecorder.isTypeSupported(mimeType)) {
-        mimeType = 'video/webm;codecs=vp8';
-      }
-      if (!MediaRecorder.isTypeSupported(mimeType)) {
-        mimeType = 'video/webm';
+      if (typeof MediaRecorder !== 'undefined') {
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          mimeType = 'video/webm;codecs=vp8';
+        }
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          mimeType = 'video/webm';
+        }
       }
 
-      const stream = canvas.captureStream(30);
+      const stream = canvas.captureStream ? canvas.captureStream(30) : null;
+      if (!stream) {
+        throw new Error('Canvas captureStream not supported in this environment');
+      }
+
       const recorder = new MediaRecorder(stream, { 
         mimeType,
-        videoBitsPerSecond: 3000000 // 3 Mbps clear HD quality
+        videoBitsPerSecond: 3500000 // 3.5 Mbps crisp HD quality
       });
 
       const chunks: Blob[] = [];
@@ -818,9 +832,11 @@ export const SystemVideoTourModal: React.FC<SystemVideoTourModalProps> = ({
       };
 
       recorder.onstop = () => {
-        const finalBlob = new Blob(chunks, { type: 'video/webm' });
+        const finalBlob = new Blob(chunks, { type: mimeType });
         const blobUrl = URL.createObjectURL(finalBlob);
+        setExportedVideoUrl(blobUrl);
 
+        // Auto trigger download
         const a = document.createElement('a');
         a.href = blobUrl;
         a.download = 'Health-a-thon-2026-Continuum-Walkthrough-Dhritiman-Mallick.webm';
@@ -828,17 +844,15 @@ export const SystemVideoTourModal: React.FC<SystemVideoTourModalProps> = ({
         a.click();
         document.body.removeChild(a);
 
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
-
         setIsExporting(false);
         setExportProgress(100);
-        setExportSuccessMessage('Single Demo Video Walkthrough (.webm) downloaded successfully! Ready for Health-a-thon 2026 submission.');
+        setExportSuccessMessage('Single Demo Video Walkthrough (.webm) generated and downloaded! You can also save it from the button below.');
       };
 
       recorder.start(100);
 
       // Fast-render progression frames across all 5 chapters to produce a valid video file
-      const totalSteps = 50;
+      const totalSteps = 60;
       let step = 0;
 
       const renderInterval = setInterval(() => {
@@ -857,15 +871,23 @@ export const SystemVideoTourModal: React.FC<SystemVideoTourModalProps> = ({
             recorder.stop();
           }
         }
-      }, 120);
+      }, 100);
 
     } catch (err) {
-      console.error('Recording error:', err);
+      console.error('Recording engine notice:', err);
       handleDownloadOfflinePackage();
       setIsExporting(false);
       setExportProgress(100);
-      setExportSuccessMessage('Direct video package generated and downloaded successfully!');
+      setExportSuccessMessage('Standalone offline video presentation package downloaded successfully!');
     }
+  };
+
+  // Video Export & Download Launcher
+  const handleExportSingleVideo = () => {
+    setShowExportDialog(true);
+    setTimeout(() => {
+      startRecordingFrames();
+    }, 150);
   };
 
   // Standalone Self-Contained Offline Video Presentation Package (.html)
@@ -1248,9 +1270,67 @@ export const SystemVideoTourModal: React.FC<SystemVideoTourModalProps> = ({
                 </div>
               )}
 
-              {/* CHAPTER 2: PATIENT USPs (CARE PATHWAY, WHATSAPP PRESCRIPTION & VIDEO GUIDANCE) */}
+              {/* CHAPTER 2: CONSTANT ABHA REPOSITORY & FEDERATED MULTI-HOSPITAL CONSENT */}
               {currentScene.id === 'ch_patient_usps' && (
                 <div className="space-y-4 animate-fadeIn">
+                  {/* Constant Health Data & ABHA Consent Governance Card */}
+                  <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-teal-950 p-4 sm:p-5 rounded-3xl border border-emerald-500/40 text-white shadow-sm space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-emerald-900/60 pb-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                          <h3 className="text-sm font-extrabold text-white">
+                            Constant Longitudinal Health Storage (ABHA ID: 91-8842-1049-2311@abdm)
+                          </h3>
+                        </div>
+                        <p className="text-xs text-emerald-200/90 mt-1">
+                          Records remain constant for Sunita Das. All hospitals access records only with her explicit ABHA consent artifacts.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-[10px] bg-emerald-500/20 text-emerald-300 font-mono font-bold px-2.5 py-1 rounded-full border border-emerald-500/40">
+                          Federated ABDM Node Active
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Federated Hospitals Consent Matrix */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
+                      {VICINITY_HEALTH_CENTERS.slice(0, 4).map((hosp) => {
+                        const isGranted = multiHospitalConsentService.isConsentGrantedForHospital(hosp.id);
+                        return (
+                          <div 
+                            key={hosp.id}
+                            className={`p-2.5 rounded-2xl border transition ${
+                              isGranted 
+                                ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-100' 
+                                : 'bg-slate-900/60 border-slate-700 text-slate-300'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300">
+                                {hosp.shortName}
+                              </span>
+                              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                                isGranted 
+                                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' 
+                                  : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                              }`}>
+                                {isGranted ? '✓ Consent Active' : 'Consent Pending'}
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-slate-400 line-clamp-1">{hosp.categoryLabel}</p>
+                            <div className="mt-2 pt-1.5 border-t border-slate-800 flex items-center justify-between text-[10px]">
+                              <span className="text-slate-400">Auto-Sync FHIR</span>
+                              <span className="font-bold text-emerald-400">{isGranted ? 'Connected' : 'Requires Approval'}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
                   <div className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-3">
                     <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                       <div className="flex items-center gap-2">
@@ -1707,13 +1787,110 @@ export const SystemVideoTourModal: React.FC<SystemVideoTourModalProps> = ({
 
         </div>
 
-        {/* Offscreen Canvas for MediaRecorder WebM generation (receives 30fps frames reliably) */}
-        <canvas 
-          ref={canvasRef} 
-          width={1280} 
-          height={720} 
-          className="fixed -left-[9999px] -top-[9999px] pointer-events-none opacity-0"
-        />
+        {/* Active Visible Video Export Console & Download Modal */}
+        <div className={showExportDialog ? "fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fadeIn" : "hidden"}>
+          <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-xl w-full p-5 sm:p-6 shadow-2xl text-white space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="p-2 rounded-xl bg-rose-500/20 text-rose-400 text-lg">🎬</span>
+                <div>
+                  <h3 className="text-base font-extrabold text-white">
+                    Continuum — Demo Video Walkthrough Generator
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Candidate: Dhritiman Mallick • Health-a-thon 2026 Phase 2 Sprint
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowExportDialog(false);
+                  setIsExporting(false);
+                }}
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Live Active Rendering Canvas (Rendered visibly so captureStream has 30fps frames) */}
+            <div className="relative rounded-2xl overflow-hidden border border-slate-700 bg-slate-950 shadow-inner">
+              <canvas 
+                ref={canvasRef} 
+                width={1280} 
+                height={720} 
+                className="w-full aspect-video block"
+              />
+              {isExporting && (
+                <div className="absolute top-3 left-3 bg-red-600/90 text-white text-[11px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-md animate-pulse">
+                  <span className="w-2 h-2 rounded-full bg-white"></span>
+                  <span>RECORDING LIVE FRAMES (30 FPS)</span>
+                </div>
+              )}
+            </div>
+
+            {/* Progress & Status */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs font-bold">
+                <span className="text-slate-300">
+                  {isExporting 
+                    ? `Generating 5-Minute Video Walkthrough... (${exportProgress}%)` 
+                    : (exportSuccessMessage || 'Video Ready for Evaluation')}
+                </span>
+                <span className="text-rose-400 font-mono">{exportProgress}%</span>
+              </div>
+              <div className="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                <div 
+                  className="h-full bg-gradient-to-r from-rose-600 via-pink-500 to-emerald-500 transition-all duration-200"
+                  style={{ width: `${exportProgress}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row items-center gap-2 pt-2">
+              {exportedVideoUrl ? (
+                <a
+                  href={exportedVideoUrl}
+                  download="Health-a-thon-2026-Continuum-Walkthrough-Dhritiman-Mallick.webm"
+                  className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs sm:text-sm shadow-md transition cursor-pointer"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>⬇️ Save .webm Video File</span>
+                </a>
+              ) : isExporting ? (
+                <button
+                  type="button"
+                  disabled
+                  className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 text-slate-400 font-bold text-xs sm:text-sm cursor-not-allowed"
+                >
+                  <Sparkles className="w-4 h-4 animate-spin text-rose-400" />
+                  <span>Recording HD video... {exportProgress}%</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={startRecordingFrames}
+                  className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs sm:text-sm shadow-md transition cursor-pointer"
+                >
+                  <Video className="w-4 h-4" />
+                  <span>🎬 Re-generate Video (.webm)</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={handleDownloadOfflinePackage}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs sm:text-sm border border-slate-700 transition cursor-pointer"
+                title="Instant zero-delay standalone offline HTML player"
+              >
+                <FileDown className="w-4 h-4 text-emerald-400" />
+                <span>💾 Offline Player (.html)</span>
+              </button>
+            </div>
+          </div>
+        </div>
 
       </div>
     </div>

@@ -20,7 +20,8 @@ import {
   MapPin,
   Video,
   Stethoscope,
-  CalendarDays
+  CalendarDays,
+  Building2
 } from 'lucide-react';
 import { AuthUser, OpdPatient, FamilyMember, MaternalTestProtocol, VaccineScheduleItem } from '../../types';
 import { opdStore } from '../../services/opdStore';
@@ -42,6 +43,7 @@ import { PatientSchedulesPanel } from './PatientSchedulesPanel';
 import { DoctorWhatsAppMessagesFeed } from './DoctorWhatsAppMessagesFeed';
 import { AbhaHealthLockerPanel } from './AbhaHealthLockerPanel';
 import { CultPatientDashboard } from './CultPatientDashboard';
+import { AbhaMultiHospitalConsentModal } from './AbhaMultiHospitalConsentModal';
 import { PortalSidebarLayout } from '../layout/PortalSidebarLayout';
 
 interface PatientPortalViewProps {
@@ -82,6 +84,7 @@ export const PatientPortalView: React.FC<PatientPortalViewProps> = ({
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [showJourneyModal, setShowJourneyModal] = useState(false);
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
+  const [showConsentManager, setShowConsentManager] = useState(false);
 
   // Vaccine filter
   const [vaccineAgeFilter, setVaccineAgeFilter] = useState<'ALL' | 'AT_BIRTH' | '6_WEEKS' | '10_WEEKS' | '14_WEEKS'>('ALL');
@@ -111,8 +114,8 @@ export const PatientPortalView: React.FC<PatientPortalViewProps> = ({
         <div className="bg-gradient-to-r from-rose-950 via-slate-900 to-purple-950 text-white px-4 sm:px-6 py-2 text-xs flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="font-semibold text-rose-200">St. Anne Mother &amp; Child Hospital</span>
-            <span className="text-slate-400 hidden sm:inline">• Patient &amp; Family Care Portal</span>
+            <span className="font-semibold text-rose-200">Continuum Healthcare Network</span>
+            <span className="text-slate-400 hidden sm:inline">• Vicinity Hospitals, Diagnostic Labs &amp; Unified ABHA Storage</span>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3 whitespace-nowrap">
@@ -245,6 +248,7 @@ export const PatientPortalView: React.FC<PatientPortalViewProps> = ({
             { heading: 'My doctor & records', items: [
               { id: 'WHATSAPP_FEED', label: 'Doctor WhatsApp', icon: MessageCircle },
               { id: 'ABHA_RECORDS', label: 'ABHA Health Locker', icon: ShieldCheck },
+              { id: 'consents', label: 'Hospital Consents', icon: Building2, onClick: () => setShowConsentManager(true) },
               { id: 'DOCTORS_ESTIMATES', label: 'Doctors & Booking', icon: Stethoscope },
               { id: 'TELE_COUNSELLING', label: '5-Min Doctor Call', icon: PhoneCall },
             ]},
@@ -703,10 +707,16 @@ export const PatientPortalView: React.FC<PatientPortalViewProps> = ({
         />
       )}
 
+      <AbhaMultiHospitalConsentModal
+        patient={patient}
+        isOpen={showConsentManager}
+        onClose={() => setShowConsentManager(false)}
+      />
+
       {/* Footer */}
       <footer className="mt-auto border-t border-slate-200 bg-white py-4 text-center text-xs text-slate-500">
         <div className="max-w-[1440px] mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>St. Anne Mother &amp; Child Hospital &bull; Continuum Maternal &amp; Family Care Portal</span>
+          <span>Continuum Maternal &amp; Family Care Portal &bull; Constant ABHA Data Storage Across All Vicinity Hospitals</span>
           <span className="text-[11px] text-slate-400">
             Compliant with ABDM, NDHM and Personal Health Data Privacy Standards
           </span>
