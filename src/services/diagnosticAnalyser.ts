@@ -158,7 +158,7 @@ export function runDiagnosticAnalysis(params: {
     if (pltVal > 0) {
       if (pltVal < 100000 || (pltVal < 1.0 && pltVal > 0.05)) {
         overallStatus = 'CRITICAL_ALERT';
-        correlations.push(`Thrombocytopenia detected (< 1.0 Lakh/mcL). Rule out Pre-eclampsia / HELLP syndrome, gestational thrombocytopenia, or Immune Thrombocytopenia.`);
+        correlations.push(`Platelets below 1.0 Lakh/mcL. Causes to consider include pre-eclampsia / HELLP, gestational thrombocytopenia and ITP; for clinician review.`);
         differentials.push('HELLP Syndrome vigilance', 'Gestational Thrombocytopenia');
         recommendations.push('Check Blood Pressure, Serum Uric Acid, Urine Protein, and LFT enzymes');
       } else if (pltVal < 150000 || (pltVal < 1.5 && pltVal >= 1.0)) {

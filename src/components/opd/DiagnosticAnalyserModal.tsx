@@ -210,9 +210,9 @@ export const DiagnosticAnalyserModal: React.FC<DiagnosticAnalyserModalProps> = (
                     )}
                     <span className="font-extrabold uppercase tracking-wide text-[11px]">
                       {analysis.overallStatus === 'CRITICAL_ALERT'
-                        ? 'Critical Diagnostic Alert Detected'
+                        ? 'Critical Value Flagged for Review'
                         : analysis.overallStatus === 'ATTENTION_NEEDED'
-                        ? 'Diagnostic Variance Requiring Clinical Action'
+                        ? 'Values Outside Reference Range · For Clinician Review'
                         : 'Physiological Harmony · Within Reference Limits'}
                     </span>
                   </div>
@@ -268,7 +268,7 @@ export const DiagnosticAnalyserModal: React.FC<DiagnosticAnalyserModalProps> = (
                       <div className="bg-purple-50 p-3 rounded-xl border border-purple-200 flex items-center justify-between text-purple-950 font-bold">
                         <span>Calculated Mentzer Index (MCV / RBC):</span>
                         <span className="font-mono text-sm px-2 py-0.5 rounded bg-white border border-purple-300">
-                          {analysis.mentzerIndex} ({analysis.mentzerIndex > 13 ? '> 13 Iron Deficiency' : '<= 13 Thalassemia screen'})
+                          {analysis.mentzerIndex} ({analysis.mentzerIndex > 13 ? '> 13: iron-deficiency pattern' : '≤ 13: thalassaemia-trait pattern'})
                         </span>
                       </div>
                     )}
