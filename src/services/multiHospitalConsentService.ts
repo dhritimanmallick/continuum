@@ -432,6 +432,7 @@ class MultiHospitalConsentService {
 
   bookAppointment(params: {
     hospitalId: string;
+    hospitalName?: string;
     doctorName: string;
     serviceType: string;
     date: string;
@@ -441,7 +442,7 @@ class MultiHospitalConsentService {
     const newApt = {
       id: `APT-${Date.now().toString().slice(-4)}`,
       hospitalId: params.hospitalId,
-      hospitalName: hospital?.name || 'Vicinity Medical Centre',
+      hospitalName: params.hospitalName || hospital?.name || 'Vicinity Medical Centre',
       doctorName: params.doctorName,
       serviceType: params.serviceType,
       date: params.date,

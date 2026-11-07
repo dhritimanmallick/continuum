@@ -35,6 +35,7 @@ import {
 import { opdStore, OPD_CLINICS } from '../../services/opdStore';
 import { vicinityRevenueService } from '../../services/vicinityRevenueService';
 import { DoctorDashboard } from './DoctorDashboard';
+import { DoctorPracticeJourney } from './DoctorPracticeJourney';
 import { PortalSidebarLayout } from '../layout/PortalSidebarLayout';
 import { PatientDatabaseView } from './PatientDatabaseView';
 import { DiagnosticAnalyserModal } from './DiagnosticAnalyserModal';
@@ -446,7 +447,7 @@ export const DoctorView: React.FC<DoctorViewProps> = ({ onOpenWhatsAppView }) =>
             { id: 'DATABASE', label: 'Patients Directory', icon: FileText, badge: patients.length },
           ]},
           { heading: 'Care', items: [
-            { id: 'CARE_JOURNEY', label: 'Care Journeys', icon: Award },
+            { id: 'CARE_JOURNEY', label: 'My Practice Journey', icon: Award },
             { id: 'LABOUR_MONITOR', label: 'Labour & Delivery', icon: Baby },
             { id: 'TELE_COUNSELLING', label: 'Tele-Counselling Queue', icon: PhoneCall },
           ]},
@@ -519,31 +520,16 @@ export const DoctorView: React.FC<DoctorViewProps> = ({ onOpenWhatsAppView }) =>
         />
       )}
 
-      {/* 2.5 My Care Journey All OPD Pathways Panel */}
+      {/* 2.5 Doctor's own practice journey */}
       {doctorWorkspaceMode === 'CARE_JOURNEY' && (
-        <div className="space-y-4">
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-2">
-              <Award className="w-4 h-4 text-rose-700" />
-              <span className="font-extrabold text-slate-900">Patient Care Journey & Continuity Inspector:</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-slate-500 font-medium">Select Patient:</span>
-              <select
-                value={selectedPatientId || patients[0]?.id || ''}
-                onChange={(e) => setSelectedPatientId(e.target.value)}
-                className="bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-800 cursor-pointer"
-              >
-                {patients.map(p => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} ({p.careJourney?.title || p.visitReason.slice(0, 20)})
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <MyCareJourneyPanel patient={selectedPatient || patients[0]} />
-        </div>
+        <DoctorPracticeJourney
+          doctorName={doctorName}
+          patients={patients}
+          onOpenPatient={(p) => {
+            setDoctorWorkspaceMode('CONSULTATION');
+            handleSelectPatient(p);
+          }}
+        />
       )}
 
       {/* 2.6 Hospital Labour & Delivery Ward Monitor */}
