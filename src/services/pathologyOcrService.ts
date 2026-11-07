@@ -1,3 +1,4 @@
+import { apiUrl } from './apiBase';
 import { DiagnosticParameter, DiagnosticAnalysisResult } from '../types';
 import { runDiagnosticAnalysis } from './diagnosticAnalyser';
 
@@ -178,7 +179,7 @@ export async function decipherReportViaOcr(params: {
     }
 
     try {
-      const resp = await fetch('/api/ai/ocr-lab-report', {
+      const resp = await fetch(apiUrl('/api/ai/ocr-lab-report'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

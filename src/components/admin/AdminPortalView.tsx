@@ -38,7 +38,8 @@ import { OndcVendorOnboardingModal } from '../ondc/OndcVendorOnboardingModal';
 import { CareGapNudgesPanel } from '../opd/CareGapNudgesPanel';
 import { PortalSidebarLayout } from '../layout/PortalSidebarLayout';
 import { getCareGapNudges, lastNudge } from '../../services/careGapNudges';
-import { Send as SendIcon } from 'lucide-react';
+import { Send as SendIcon, Wallet as WalletIcon } from 'lucide-react';
+import { WhatsAppCreditsPanel } from '../billing/WhatsAppCredits';
 import { DoctorProfile, HospitalRoom, DiagnosticLabConfig, OpdPatient } from '../../types';
 
 interface AdminPortalViewProps {
@@ -47,7 +48,7 @@ interface AdminPortalViewProps {
 }
 
 export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ onNavigateToPortal, onOpenWhatsAppView }) => {
-  const [activeTab, setActiveTab] = useState<'doctors' | 'rooms' | 'patients' | 'caregaps' | 'labs' | 'ondc' | 'backbone'>('doctors');
+  const [activeTab, setActiveTab] = useState<'doctors' | 'rooms' | 'patients' | 'caregaps' | 'whatsapp' | 'labs' | 'ondc' | 'backbone'>('doctors');
   
   // Doctors state
   const doctors = opdStore.getDoctorProfiles();
@@ -174,6 +175,7 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ onNavigateToPo
           ]},
           { heading: 'Patient follow-through', items: [
             { id: 'caregaps', label: 'Care Gaps & Nudges', icon: SendIcon, badge: getCareGapNudges(opdStore.getAllVisitedPatients()).filter(n => !lastNudge(n)).length, badgeTone: 'rose' },
+            { id: 'whatsapp', label: 'WhatsApp & Billing', icon: WalletIcon },
           ]},
           { heading: 'Network & integrations', items: [
             { id: 'labs', label: 'Labs', icon: TestTubes, badge: labs.length },
@@ -590,8 +592,11 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ onNavigateToPo
           scopeLabel="All OPD rooms"
           sentBy="Hospital Administration"
           onOpenWhatsAppView={id => onOpenWhatsAppView?.(id)}
+          onOpenCredits={() => setActiveTab('whatsapp')}
         />
       )}
+
+      {activeTab === 'whatsapp' && <WhatsAppCreditsPanel />}
 
       {activeTab === 'labs' && (
         <div className="space-y-4">

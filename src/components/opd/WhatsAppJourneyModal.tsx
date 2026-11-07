@@ -148,9 +148,15 @@ export const WhatsAppJourneyModal: React.FC<WhatsAppJourneyModalProps> = ({
                     <p className="text-slate-800 text-xs leading-relaxed whitespace-pre-line font-sans">
                       {msg.text}
                     </p>
-                    <div className="flex justify-end text-[10px] text-emerald-600 font-bold">
-                      <CheckCheck className="w-3.5 h-3.5 inline text-emerald-600" />
-                    </div>
+                    {msg.deliveryStatus === 'sending' ? (
+                      <div className="flex justify-end text-[10px] text-slate-400 font-bold">Sending…</div>
+                    ) : msg.deliveryStatus === 'not_sent' || msg.deliveryStatus === 'failed' ? (
+                      <div className="text-[10px] text-amber-800 font-bold bg-amber-50 border border-amber-200 rounded-lg px-2 py-1">{msg.deliveryNote || 'Not sent'}</div>
+                    ) : (
+                      <div className="flex justify-end text-[10px] text-emerald-600 font-bold">
+                        <CheckCheck className="w-3.5 h-3.5 inline text-emerald-600" />
+                      </div>
+                    )}
                   </div>
                 );
               })

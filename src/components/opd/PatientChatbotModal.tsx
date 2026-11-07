@@ -1,3 +1,4 @@
+import { apiUrl } from '../../services/apiBase';
 import React, { useState } from 'react';
 import { 
   X, 
@@ -78,7 +79,7 @@ export const PatientChatbotModal: React.FC<PatientChatbotModalProps> = ({
           }))
       };
 
-      const resp = await fetch('/api/ai/patient-chat', {
+      const resp = await fetch(apiUrl('/api/ai/patient-chat'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

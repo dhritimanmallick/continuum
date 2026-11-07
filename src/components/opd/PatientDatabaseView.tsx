@@ -89,7 +89,7 @@ export const PatientDatabaseView: React.FC<PatientDatabaseViewProps> = ({
       )}
 
       {/* Header Banner */}
-      <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-2xs space-y-4">
+      <div className="bg-white rounded-3xl p-4 sm:p-6 border border-slate-200 shadow-2xs space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
@@ -100,7 +100,7 @@ export const PatientDatabaseView: React.FC<PatientDatabaseViewProps> = ({
                 {allPatients.length} Total Patients on File
               </span>
             </div>
-            <h1 className="text-2xl font-black text-slate-900 mt-1">
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">
               {restrictClinicId ? `${doctorName} — Visited Patient Repository` : 'Network Patient Database & AI Follow-Up Center'}
             </h1>
             <p className="text-xs text-slate-500">
@@ -186,13 +186,47 @@ export const PatientDatabaseView: React.FC<PatientDatabaseViewProps> = ({
       </div>
 
       {/* Patient Cards / Table List */}
-      <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-2xs space-y-4">
+      <div className="bg-white rounded-3xl p-4 sm:p-6 border border-slate-200 shadow-2xs space-y-4">
         <div className="flex items-center justify-between text-xs text-slate-500 font-bold">
           <span>Showing {filteredPatients.length} of {allPatients.length} patients in database</span>
           <span className="text-[11px] text-slate-400">Click &ldquo;Send AI Follow-Up&rdquo; to dispatch intelligent WhatsApp alerts</span>
         </div>
 
-        <div className="overflow-x-auto rounded-2xl border border-slate-200">
+        {/* Phone: one card per patient */}
+        <ul className="md:hidden space-y-3">
+          {filteredPatients.map(p => (
+            <li key={p.id} className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-2xs">
+              <button type="button" onClick={() => onSelectPatient?.(p)} className="w-full text-left cursor-pointer">
+                <span className="flex items-center justify-between gap-2">
+                  <span className="text-base font-extrabold text-slate-900 truncate">{p.name}</span>
+                  {p.followUpStatus && (
+                    <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-black uppercase border ${
+                      p.followUpStatus === 'Overdue' ? 'bg-rose-100 text-rose-900 border-rose-300'
+                      : p.followUpStatus === 'Due Today' ? 'bg-amber-100 text-amber-900 border-amber-300'
+                      : 'bg-slate-100 text-slate-700 border-slate-200'
+                    }`}>{p.followUpStatus}</span>
+                  )}
+                </span>
+                <span className="block text-xs text-slate-500 mt-0.5">
+                  {p.age} yrs{p.isPregnant ? ` · ${p.pregnancyDetails?.gestationalAgeWeeks} weeks pregnant` : ''} · {p.preferredLanguage || 'English'}
+                </span>
+                <span className="block text-xs text-slate-500">
+                  {p.clinicName?.split('(')[0]?.trim() || 'Maternal OPD'}{p.followUpDate ? ` · follow-up ${p.followUpDate}` : ''}
+                </span>
+              </button>
+              <div className="grid grid-cols-2 gap-2 mt-3">
+                <a href={`tel:${p.mobile.replace(/\s/g, '')}`} className="flex items-center justify-center gap-1 py-2.5 rounded-xl border border-slate-200 text-[13px] font-bold text-slate-800 active:bg-slate-50">
+                  <Phone className="w-4 h-4" /> Call
+                </a>
+                <button type="button" onClick={() => onOpenWhatsAppView?.(p.id)} className="flex items-center justify-center gap-1 py-2.5 rounded-xl bg-emerald-600 text-white text-[13px] font-bold cursor-pointer">
+                  <MessageSquare className="w-4 h-4" /> WhatsApp
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-200">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 text-slate-700 font-bold border-b border-slate-200 uppercase tracking-wider text-[10px]">
               <tr>

@@ -27,6 +27,7 @@ import { NotificationCenterModal } from './components/patient/NotificationCenter
 import { SystemVideoTourModal } from './components/video/SystemVideoTourModal';
 import { opdStore } from './services/opdStore';
 import { ProfileHome } from './components/layout/ProfileHome';
+import { APP_BACK_EVENT } from './native';
 import { ProfileTopBar } from './components/layout/ProfileTopBar';
 import { PROFILE_META, ProfileKey, profileForUser } from './components/layout/profiles';
 import { authService } from './services/authService';
@@ -128,6 +129,13 @@ export default function App() {
     setShowStaffLogin(false);
     window.scrollTo({ top: 0 });
   };
+
+  // Android back button inside a profile returns to the profile home screen
+  useEffect(() => {
+    const onBack = (e: Event) => { if (authService.getCurrentUser()) { e.preventDefault(); goHome(); } };
+    window.addEventListener(APP_BACK_EVENT, onBack);
+    return () => window.removeEventListener(APP_BACK_EVENT, onBack);
+  });
 
   const openProfile = (key: ProfileKey) => {
     const user = authService.getUsers().find(u => u.id === PROFILE_META[key].userId);

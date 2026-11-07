@@ -7,6 +7,7 @@
  */
 import { OpdPatient } from '../types';
 import { opdStore } from './opdStore';
+import { deliverWhatsApp, DeliverResult } from './whatsappGateway';
 import { runRuleSimulation, ruleWindowDays, INITIAL_RULES } from './rulesEngine';
 
 export type NudgeCategory = 'TESTING' | 'PHARMACY' | 'ADHERENCE';
@@ -191,22 +192,28 @@ export function getCareGapNudges(patients: OpdPatient[]): CareGapNudge[] {
 
 /** When this gap was last nudged, if ever (read from the patient's WhatsApp log). */
 export function lastNudge(n: CareGapNudge): string | null {
-  const m = [...(n.patient.whatsappMessages || [])].reverse().find(w => w.nudgeKey === n.key);
+  const m = [...(n.patient.whatsappMessages || [])].reverse()
+    .find(w => w.nudgeKey === n.key && w.deliveryStatus !== 'not_sent' && w.deliveryStatus !== 'failed');
   return m ? (m.timestamp || 'sent') : null;
 }
 
-/** Send the nudge on WhatsApp and record it on the patient's timeline. */
-export function sendNudge(n: CareGapNudge, sentBy: string) {
+/** Send the nudge on WhatsApp (billed to the OPD's credit) and record it on the patient's timeline. */
+export async function sendNudge(n: CareGapNudge, sentBy: string): Promise<DeliverResult> {
   const p = opdStore.patients.find(x => x.id === n.patient.id);
-  if (!p) return;
+  if (!p) return { ok: false, reason: 'failed', message: 'Patient not found' };
   const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  p.whatsappMessages.push({
+  const msg: any = {
     id: `WA-NUDGE-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-    direction: 'outgoing', type: 'care_gap', text: n.message, timestamp: time, delivered: true, nudgeKey: n.key,
-  });
-  p.timeline.unshift({
-    id: `TL-NUDGE-${Date.now()}`, time, title: `Care-gap nudge sent on WhatsApp: ${n.title}`,
-    actor: sentBy, details: `${p.preferredLanguage || 'English'} message to ${p.mobile}.`,
-  });
-  opdStore.notify();
+    direction: 'outgoing', type: 'care_gap', text: n.message, timestamp: time, nudgeKey: n.key,
+  };
+  p.whatsappMessages.push(msg);
+  const r = await deliverWhatsApp(p, msg, () => opdStore.notify());
+  if (r.ok) {
+    p.timeline.unshift({
+      id: `TL-NUDGE-${Date.now()}`, time, title: `Care-gap nudge sent on WhatsApp: ${n.title}`,
+      actor: sentBy, details: `${p.preferredLanguage || 'English'} message to ${p.mobile}.`,
+    });
+    opdStore.notify();
+  }
+  return r;
 }

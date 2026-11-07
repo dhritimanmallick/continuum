@@ -1,3 +1,4 @@
+import { apiUrl } from './apiBase';
 import { opdStore } from './opdStore';
 import { authService } from './authService';
 import { abdmService } from './abdmService';
@@ -909,7 +910,7 @@ class TestSuiteService {
     // Check 6: Backend Server Health Endpoint & API Gateway
     const t6Start = performance.now();
     try {
-      const res = await fetch('/api/health');
+      const res = await fetch(apiUrl('/api/health'));
       if (res.ok) {
         const data = await res.json();
         results.push({

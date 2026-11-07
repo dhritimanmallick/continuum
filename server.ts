@@ -13,6 +13,7 @@ import { emergencyCounsellingService } from './src/services/emergencyCounselling
 import { labourDeliveryService } from './src/services/labourDeliveryService.ts';
 import { familyService } from './src/services/familyService.ts';
 import { unifiedNotificationService } from './src/services/unifiedNotificationService.ts';
+import { mountWhatsApp } from './src/server/whatsapp.ts';
 
 dotenv.config();
 
@@ -23,6 +24,24 @@ const app = express();
 const port = 3000;
 
 app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: false }));
+
+// The Android app (Capacitor) loads the UI from https://localhost and calls this API cross-origin
+const APP_ORIGINS = new Set(['https://localhost', 'capacitor://localhost', 'http://localhost']);
+app.use('/api', (req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && APP_ORIGINS.has(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  }
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
+
+// WhatsApp messaging (Gupshup) with per-OPD prepaid credit
+mountWhatsApp(app);
 
 // Initialize Google GenAI client (User-Agent must be 'aistudio-build')
 const ai = new GoogleGenAI({
