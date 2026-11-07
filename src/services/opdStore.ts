@@ -290,7 +290,7 @@ export const OPD_CLINICS: OpdClinic[] = [
     roomNumber: 'Room 4',
     leadDoctor: 'Dr. Anita Rao',
     doctorSpecialty: 'MBBS, MS (Obstetrics & Gynaecology)',
-    receptionistName: 'Pooja K.',
+    receptionistName: 'Sister Mary Fernandez',
     department: 'Maternal & Child Health (MCH)',
     description: 'Routine & high-risk antenatal care, gestational screening, ultrasound biometry review.',
     colorTheme: 'teal',

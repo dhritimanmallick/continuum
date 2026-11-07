@@ -278,8 +278,8 @@ export const INITIAL_AUTH_USERS: AuthUser[] = [
 
 class AuthService {
   private users: AuthUser[] = [...INITIAL_AUTH_USERS];
-  // Default to Dr. Radhika Sen (Hospital Admin) or Dr. Anita Rao so the user immediately sees the rich portal, or can switch/logout
-  private currentUser: AuthUser | null = INITIAL_AUTH_USERS[0];
+  // Start on the profile home screen; a profile is chosen there (or via staff sign-in)
+  private currentUser: AuthUser | null = null;
   private listeners: Set<() => void> = new Set();
 
   constructor() {
@@ -298,18 +298,8 @@ class AuthService {
       // ignore
     }
 
-    // Restore session if available
-    try {
-      const savedUserId = localStorage.getItem('continuum_logged_in_user_id');
-      if (savedUserId) {
-        const found = this.users.find(u => u.id === savedUserId);
-        if (found) {
-          this.currentUser = found;
-        }
-      }
-    } catch {
-      // ignore
-    }
+    // Sessions are not restored on reload: the app always opens on the profile home screen
+    try { localStorage.removeItem('continuum_logged_in_user_id'); } catch { /* ignore */ }
   }
 
   subscribe(listener: () => void) {

@@ -26,6 +26,9 @@ import { LabourDeliveryLiveTrackerModal } from './components/patient/LabourDeliv
 import { NotificationCenterModal } from './components/patient/NotificationCenterModal';
 import { SystemVideoTourModal } from './components/video/SystemVideoTourModal';
 import { opdStore } from './services/opdStore';
+import { ProfileHome } from './components/layout/ProfileHome';
+import { ProfileTopBar } from './components/layout/ProfileTopBar';
+import { PROFILE_META, ProfileKey, profileForUser } from './components/layout/profiles';
 import { authService } from './services/authService';
 import { OpdUserRole, OpdPatient, PortalType, OpdRole, AuthUser } from './types';
 
@@ -73,6 +76,7 @@ export default function App() {
   const [showLabourTrackerModal, setShowLabourTrackerModal] = useState(false);
   const [showNotificationCenterModal, setShowNotificationCenterModal] = useState(false);
   const [showVideoTourModal, setShowVideoTourModal] = useState(false);
+  const [showStaffLogin, setShowStaffLogin] = useState(false);
 
   const stats = opdStore.getStats();
 
@@ -118,10 +122,34 @@ export default function App() {
     }
   };
 
-  // If no user is logged in, show the Login and Staff Authentication View
+  const goHome = () => {
+    authService.logout();
+    setCurrentUser(null);
+    setShowStaffLogin(false);
+    window.scrollTo({ top: 0 });
+  };
+
+  const openProfile = (key: ProfileKey) => {
+    const user = authService.getUsers().find(u => u.id === PROFILE_META[key].userId);
+    if (!user) return;
+    authService.quickLogin(user.id);
+    handleLoginSuccess(user);
+    window.scrollTo({ top: 0 });
+  };
+
+  // No profile chosen yet: the profile home screen (staff sign-in is one click away)
+  if (!currentUser && !showStaffLogin) {
+    return <ProfileHome onOpen={openProfile} onStaffSignIn={() => setShowStaffLogin(true)} />;
+  }
+
   if (!currentUser) {
     return (
       <>
+        <button
+          type="button"
+          onClick={() => setShowStaffLogin(false)}
+          className="fixed top-3 left-3 z-50 px-3 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold shadow-md cursor-pointer"
+        >← All profiles</button>
         <LoginView
           onLoginSuccess={handleLoginSuccess}
           onOpenVideoTour={() => setShowVideoTourModal(true)}
@@ -148,11 +176,7 @@ export default function App() {
         <PatientPortalView
           currentUser={currentUser}
           patientId={currentUser.patientId || 'PAT-104'}
-          onLogout={() => {
-            authService.logout();
-            setCurrentUser(null);
-          }}
-          onOpenVideoTour={() => setShowVideoTourModal(true)}
+          onLogout={goHome}
         />
         {showVideoTourModal && (
           <SystemVideoTourModal
@@ -169,46 +193,20 @@ export default function App() {
     );
   }
 
+  const viewProfile: ProfileKey =
+    currentPortal === 'OPD' ? (currentRole === 'DOCTOR' ? 'DOCTOR' : 'FRONT_DESK')
+    : currentPortal === 'LAB' ? 'LAB'
+    : currentPortal === 'PHARMA' ? 'PHARMACY'
+    : 'ADMIN';
+
   return (
     <div className="min-h-screen bg-[#faf7f5] flex flex-col font-sans text-slate-900 selection:bg-rose-200">
-      {/* Top Navbar with Portals: Admin, OPD Clinics, Diagnostic Labs, Pharmacies */}
-      <OpdNavbar
-        currentPortal={currentPortal}
-        currentRole={currentRole}
-        onPortalChange={handlePortalChange}
-        onOpdRoleChange={handleOpdRoleChange}
-        stats={stats}
-        onOpenWhatsAppView={() => handleOpenWhatsAppView()}
-        onOpenCareJourney={() => {
-          setCareJourneyPatientId(null);
-          setShowCareJourneyModal(true);
-        }}
-        onOpenPatientHub={() => {
-          setPatientHubInitialTab('FAMILY');
-          setShowPatientHubModal(true);
-        }}
-        onOpenKnowledgeLibrary={() => {
-          setShowKnowledgeLibraryModal(true);
-        }}
-        onOpenCostEstimator={() => {
-          setShowCostEstimatorModal(true);
-        }}
-        onOpenDoctorCounselling={() => {
-          setShowEmergencyCounsellingModal(true);
-        }}
-        onOpenLabourTracker={() => {
-          setShowLabourTrackerModal(true);
-        }}
-        onOpenNotifications={() => {
-          setShowNotificationCenterModal(true);
-        }}
-        onOpenVideoTour={() => {
-          setShowVideoTourModal(true);
-        }}
-        onLogout={() => {
-          authService.logout();
-          setCurrentUser(null);
-        }}
+      {/* One top bar: which profile this is, and the way back to all profiles */}
+      <ProfileTopBar
+        profile={viewProfile}
+        userName={viewProfile === profileForUser(currentUser) ? currentUser.name : `Opened from ${PROFILE_META[profileForUser(currentUser)].label}`}
+        userDetail={viewProfile === profileForUser(currentUser) ? currentUser.title : undefined}
+        onHome={goHome}
       />
 
       {/* Main Workspace based on the active Portal */}
