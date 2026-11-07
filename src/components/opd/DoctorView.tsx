@@ -35,6 +35,7 @@ import {
 import { opdStore, OPD_CLINICS } from '../../services/opdStore';
 import { vicinityRevenueService } from '../../services/vicinityRevenueService';
 import { DoctorDashboard } from './DoctorDashboard';
+import { PortalSidebarLayout } from '../layout/PortalSidebarLayout';
 import { PatientDatabaseView } from './PatientDatabaseView';
 import { DiagnosticAnalyserModal } from './DiagnosticAnalyserModal';
 import { DoctorRevenueDashboard } from '../vicinity/DoctorRevenueDashboard';
@@ -404,7 +405,7 @@ export const DoctorView: React.FC<DoctorViewProps> = ({ onOpenWhatsAppView }) =>
   const completedToday = patients.filter(p => p.queueStatus === 'Completed');
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 mx-auto">
       {/* Consultation Confirmation Notification */}
       {completionToast && (
         <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-4 rounded-2xl shadow-xl border border-slate-700 flex items-center gap-3.5 animate-in slide-in-from-bottom-5 duration-300">
@@ -426,6 +427,37 @@ export const DoctorView: React.FC<DoctorViewProps> = ({ onOpenWhatsAppView }) =>
         </div>
       )}
 
+      <PortalSidebarLayout
+        activeId={doctorWorkspaceMode}
+        onSelect={id => {
+          setDoctorWorkspaceMode(id as typeof doctorWorkspaceMode);
+          if (id === 'DASHBOARD' || id === 'DATABASE') setSelectedPatientId(null);
+        }}
+        header={
+          <div className="space-y-0.5">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-rose-700">Doctor station</div>
+            <div className="text-sm font-extrabold text-slate-900 truncate">{doctorName}</div>
+            <div className="text-[11px] text-slate-500 truncate">{currentDoctor.roomNumber}</div>
+          </div>
+        }
+        groups={[
+          { heading: 'Consultations', items: [
+            { id: 'CONSULTATION', label: "Today's Patients", icon: Stethoscope, badge: activeWaiting.length, badgeTone: 'amber' },
+            { id: 'DATABASE', label: 'Patients Directory', icon: FileText, badge: patients.length },
+          ]},
+          { heading: 'Care', items: [
+            { id: 'CARE_JOURNEY', label: 'Care Journeys', icon: Award },
+            { id: 'LABOUR_MONITOR', label: 'Labour & Delivery', icon: Baby },
+            { id: 'TELE_COUNSELLING', label: 'Tele-Counselling Queue', icon: PhoneCall },
+          ]},
+          { heading: 'Tools', items: [
+            { id: 'DASHBOARD', label: 'Analytics', icon: Activity },
+            { id: 'cost', label: 'Cost Estimator', icon: Calculator, onClick: () => setShowCostEstimatorModal(true) },
+            { id: 'library', label: 'Medical Library', icon: BookOpen, onClick: () => setShowKnowledgeLibraryModal(true) },
+          ]},
+        ]}
+      >
+        <div className="space-y-6">
       {/* Dr. Anita Rao's Warm & Lively Header Banner */}
       <div className="bg-gradient-to-br from-rose-50/90 via-pink-50/60 to-purple-50/50 rounded-3xl p-6 sm:p-7 border border-rose-200/80 shadow-xs space-y-4 relative overflow-hidden">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -458,106 +490,6 @@ export const DoctorView: React.FC<DoctorViewProps> = ({ onOpenWhatsAppView }) =>
           </div>
         </div>
 
-        {/* Doctor Workspace View Switcher */}
-        <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-rose-200/60 text-xs font-semibold">
-          <button
-            onClick={() => setDoctorWorkspaceMode('CONSULTATION')}
-            className={`px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
-              doctorWorkspaceMode === 'CONSULTATION'
-                ? 'bg-rose-700 text-white shadow-xs'
-                : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
-            }`}
-          >
-            <Stethoscope className="w-3.5 h-3.5" />
-            <span>Consultations ({activeWaiting.length})</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setDoctorWorkspaceMode('DASHBOARD');
-              setSelectedPatientId(null);
-            }}
-            className={`px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
-              doctorWorkspaceMode === 'DASHBOARD'
-                ? 'bg-rose-700 text-white shadow-xs'
-                : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
-            }`}
-          >
-            <Activity className="w-3.5 h-3.5" />
-            <span>Analytics</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setDoctorWorkspaceMode('DATABASE');
-              setSelectedPatientId(null);
-            }}
-            className={`px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
-              doctorWorkspaceMode === 'DATABASE'
-                ? 'bg-rose-700 text-white shadow-xs'
-                : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
-            }`}
-          >
-            <FileText className="w-3.5 h-3.5" />
-            <span>Patients Directory ({patients.length})</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setDoctorWorkspaceMode('CARE_JOURNEY');
-            }}
-            className={`px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
-              doctorWorkspaceMode === 'CARE_JOURNEY'
-                ? 'bg-rose-700 text-white shadow-xs'
-                : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
-            }`}
-          >
-            <Award className="w-3.5 h-3.5 text-amber-300" />
-            <span>My Care Journey ({patients.length})</span>
-          </button>
-
-          <button
-            onClick={() => setDoctorWorkspaceMode('LABOUR_MONITOR')}
-            className={`px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
-              doctorWorkspaceMode === 'LABOUR_MONITOR'
-                ? 'bg-rose-700 text-white shadow-xs'
-                : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
-            }`}
-          >
-            <Baby className="w-3.5 h-3.5 text-rose-500" />
-            <span>Labour &amp; Delivery Ward Monitor</span>
-          </button>
-
-          <button
-            onClick={() => setDoctorWorkspaceMode('TELE_COUNSELLING')}
-            className={`px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
-              doctorWorkspaceMode === 'TELE_COUNSELLING'
-                ? 'bg-rose-700 text-white shadow-xs'
-                : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
-            }`}
-          >
-            <PhoneCall className="w-3.5 h-3.5 text-red-500" />
-            <span>Emergency Tele-Counselling Queue</span>
-          </button>
-
-          <div className="ml-auto hidden xl:flex items-center gap-2">
-            <button
-              onClick={() => setShowCostEstimatorModal(true)}
-              className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition flex items-center gap-1 cursor-pointer"
-            >
-              <Calculator className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Cost Estimator</span>
-            </button>
-
-            <button
-              onClick={() => setShowKnowledgeLibraryModal(true)}
-              className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 text-xs font-bold transition flex items-center gap-1 cursor-pointer"
-            >
-              <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
-              <span>Medical Library</span>
-            </button>
-          </div>
-        </div>
       </div>
 
 
@@ -1472,6 +1404,9 @@ export const DoctorView: React.FC<DoctorViewProps> = ({ onOpenWhatsAppView }) =>
           </div>
         </div>
       ))}
+
+        </div>
+      </PortalSidebarLayout>
 
       {/* Printable Prescription Modal Slip */}
       {selectedPatientForPrintRx && (

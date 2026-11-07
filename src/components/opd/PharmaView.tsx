@@ -28,6 +28,8 @@ import {
   Globe
 } from 'lucide-react';
 import { PharmacyOrder, PrescriptionMedicineItem, OpdClinic, PharmacyPartner } from '../../types';
+import { Users as UsersIcon, Stethoscope as StethoscopeIcon, Store as StoreIcon } from 'lucide-react';
+import { PortalSidebarLayout } from '../layout/PortalSidebarLayout';
 import { opdStore, OPD_CLINICS } from '../../services/opdStore';
 
 interface PharmaViewProps {
@@ -97,7 +99,7 @@ export const PharmaView: React.FC<PharmaViewProps> = ({ onOpenWhatsAppView }) =>
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 mx-auto">
       {/* Toast Notification */}
       {dispenseSuccessToast && (
         <div className="fixed bottom-6 right-6 z-50 bg-emerald-900 text-white px-5 py-3 rounded-2xl shadow-xl border border-emerald-500 flex items-center gap-3 animate-bounce">
@@ -106,39 +108,38 @@ export const PharmaView: React.FC<PharmaViewProps> = ({ onOpenWhatsAppView }) =>
         </div>
       )}
 
-      {/* Pharmacy Store Switcher Bar */}
-      <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-2">
-          <Compass className="w-4 h-4 text-emerald-700" />
-          <span className="font-extrabold text-slate-800 uppercase tracking-wide text-[11px]">
-            Active Pharmacy Store / Chemist Location:
-          </span>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-1.5 font-bold">
-          {allPharmPartners.map(pharm => (
-            <button
-              key={pharm.id}
-              onClick={() => {
-                setSelectedPharmacyId(pharm.id);
-                opdStore.setSelectedPharmacy(pharm.id);
-              }}
-              className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
-                pharm.id === currentPharmacy.id
-                  ? 'bg-emerald-900 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              <Pill className="w-3.5 h-3.5" />
-              <span>{pharm.name.split('(')[0].split('—')[0].trim()}</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-white/20">
-                {pharm.distance.split(' ')[0]}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-
+      <PortalSidebarLayout
+        activeId={statusFilter}
+        onSelect={id => setStatusFilter(id as 'all' | 'pending' | 'dispensed')}
+        header={
+          <div className="space-y-0.5">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-rose-700">Pharmacy</div>
+            <div className="text-sm font-extrabold text-slate-900 truncate">{currentPharmacy.name.split(/ & | — |\(/)[0].trim()}</div>
+            <div className="text-[11px] text-slate-500 truncate">{currentPharmacy.distance}</div>
+          </div>
+        }
+        groups={[
+          { heading: 'Prescriptions', items: [
+            { id: 'all', label: 'All Orders', icon: Pill, badge: allOrders.length },
+            { id: 'pending', label: 'To Dispense', icon: Clock, badge: pendingCount, badgeTone: 'amber' },
+            { id: 'dispensed', label: 'Dispensed', icon: CheckCircle2, badge: dispensedCount, badgeTone: 'emerald' },
+          ]},
+          { heading: 'Referring doctor', items: [
+            { id: 'clinic-all', label: 'All Doctors', icon: UsersIcon, badge: opdStore.getAllPharmacyOrders().length, selected: selectedClinicFilter === 'all', onClick: () => setSelectedClinicFilter('all') },
+            ...OPD_CLINICS.map(clinic => ({
+              id: `clinic-${clinic.id}`, label: clinic.leadDoctor, icon: StethoscopeIcon,
+              badge: opdStore.getAllPharmacyOrders(clinic.id).length,
+              selected: selectedClinicFilter === clinic.id, onClick: () => setSelectedClinicFilter(clinic.id),
+            })),
+          ]},
+          { heading: 'Pharmacy store', items: allPharmPartners.map(pharm => ({
+            id: `ph-${pharm.id}`, label: pharm.name.split(/ & | — |\(/)[0].trim(), icon: StoreIcon,
+            selected: pharm.id === currentPharmacy.id,
+            onClick: () => { setSelectedPharmacyId(pharm.id); opdStore.setSelectedPharmacy(pharm.id); },
+          }))},
+        ]}
+      >
+        <div className="space-y-6">
       {/* Header Banner - Pharmacy Store */}
       <div className="bg-slate-900 text-white rounded-2xl p-5 shadow-xs border border-slate-800">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -185,92 +186,21 @@ export const PharmaView: React.FC<PharmaViewProps> = ({ onOpenWhatsAppView }) =>
         </div>
       </div>
 
-      {/* Linked OPDs Filter Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-emerald-700" />
-            <span className="text-xs font-extrabold text-slate-900 uppercase tracking-wide">
-              Filter by Referring OPD Practice (Originating Doctor):
-            </span>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold">
-            <button
-              onClick={() => setSelectedClinicFilter('all')}
-              className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
-                selectedClinicFilter === 'all'
-                  ? 'bg-emerald-900 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              <span>All Referring Doctors</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-white/20">
-                {opdStore.getAllPharmacyOrders().length}
-              </span>
-            </button>
-
-            {OPD_CLINICS.map(clinic => {
-              const count = opdStore.getAllPharmacyOrders(clinic.id).length;
-              return (
-                <button
-                  key={clinic.id}
-                  onClick={() => setSelectedClinicFilter(clinic.id)}
-                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
-                    selectedClinicFilter === clinic.id
-                      ? 'bg-emerald-900 text-white shadow-xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  <span>{clinic.leadDoctor} ({clinic.department.split(' ')[0]})</span>
-                  {count > 0 && (
-                    <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-900 font-bold">
-                      {count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+      {/* Search */}
+      <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs flex items-center justify-between gap-3 text-xs">
+        <div className="relative w-full sm:w-96">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder="Search token #, patient name, doctor, OPD ID..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:bg-white focus:border-rose-400 focus:outline-none"
+          />
         </div>
-
-        {/* Search & Status Controls */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-slate-100">
-          <div className="relative w-full sm:w-80">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Search token #, patient name, doctor, OPD ID..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:bg-white focus:border-emerald-500 focus:outline-none"
-            />
-          </div>
-
-          <div className="flex items-center gap-2 self-end sm:self-auto text-xs">
-            <span className="text-slate-500 font-semibold text-[11px]">Status:</span>
-            <div className="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200 font-bold text-[11px]">
-              <button
-                onClick={() => setStatusFilter('all')}
-                className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${statusFilter === 'all' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600'}`}
-              >
-                All ({allOrders.length})
-              </button>
-              <button
-                onClick={() => setStatusFilter('pending')}
-                className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${statusFilter === 'pending' ? 'bg-white text-amber-900 shadow-2xs' : 'text-slate-600'}`}
-              >
-                Pending ({pendingCount})
-              </button>
-              <button
-                onClick={() => setStatusFilter('dispensed')}
-                className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${statusFilter === 'dispensed' ? 'bg-white text-emerald-900 shadow-2xs' : 'text-slate-600'}`}
-              >
-                Dispensed ({dispensedCount})
-              </button>
-            </div>
-          </div>
-        </div>
+        <span className="hidden sm:inline text-[11px] font-bold text-slate-500 whitespace-nowrap">
+          Showing {filteredOrders.length} of {allOrders.length}
+        </span>
       </div>
 
       {/* Orders Grid / Queue */}
@@ -481,6 +411,9 @@ export const PharmaView: React.FC<PharmaViewProps> = ({ onOpenWhatsAppView }) =>
           })}
         </div>
       )}
+
+        </div>
+      </PortalSidebarLayout>
 
       {/* MODAL 1: Dispense & Loop Closure Confirmation */}
       {selectedOrderForDispensing && (

@@ -115,17 +115,19 @@ export const PatientPortalView: React.FC<PatientPortalViewProps> = ({
             <span className="text-slate-400 hidden sm:inline">• Patient &amp; Family Care Portal</span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 whitespace-nowrap">
             <div className="flex items-center gap-1.5 text-amber-300 bg-amber-950/70 border border-amber-600/50 px-2.5 py-0.5 rounded-full font-bold text-[11px]">
               <Phone className="w-3 h-3 text-amber-400" />
-              <span>24x7 Maternity Helpline: 080-2211-9999</span>
+              <span className="hidden sm:inline">24x7 Maternity Helpline: 080-2211-9999</span>
+              <span className="sm:hidden">Helpline 080-2211-9999</span>
             </div>
             <a 
               href="tel:108"
               className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-[11px] shadow-xs transition"
             >
               <AlertTriangle className="w-3 h-3 text-white" />
-              <span>Emergency 108 SOS</span>
+              <span className="hidden sm:inline">Emergency 108 SOS</span>
+              <span className="sm:hidden">108 SOS</span>
             </a>
           </div>
         </div>
@@ -138,8 +140,8 @@ export const PatientPortalView: React.FC<PatientPortalViewProps> = ({
               alt="Vyuhaa Logo" 
               className="h-8 md:h-9 w-auto object-contain" 
             />
-            <div className="h-6 w-px bg-slate-200" />
-            <div>
+            <div className="hidden sm:block h-6 w-px bg-slate-200" />
+            <div className="hidden sm:block">
               <div className="text-xs font-bold text-slate-900 tracking-tight flex items-center gap-1.5">
                 <span>Continuum</span>
                 <span className="px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 text-[10px] font-extrabold uppercase">
@@ -159,7 +161,7 @@ export const PatientPortalView: React.FC<PatientPortalViewProps> = ({
             </div>
 
             {/* Profile Info */}
-            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl">
+            <div className="flex items-center gap-2 sm:bg-slate-50 sm:border sm:border-slate-200 sm:px-3 py-1.5 rounded-xl shrink-0">
               <div className="w-8 h-8 rounded-full bg-rose-100 border border-rose-300 text-rose-800 flex items-center justify-center font-bold text-sm shrink-0">
                 {currentUser.avatar || '🤰'}
               </div>
@@ -183,13 +185,12 @@ export const PatientPortalView: React.FC<PatientPortalViewProps> = ({
               <button
                 type="button"
                 onClick={onOpenVideoTour}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-900 to-indigo-900 hover:from-purple-800 hover:to-indigo-800 text-purple-200 hover:text-white text-xs font-bold border border-purple-500/70 shadow-xs transition cursor-pointer"
+                className="inline-flex items-center justify-center gap-1.5 h-9 sm:h-auto w-9 sm:w-auto sm:px-3 py-1.5 rounded-xl shrink-0 bg-gradient-to-r from-purple-900 to-indigo-900 hover:from-purple-800 hover:to-indigo-800 text-purple-200 hover:text-white text-xs font-bold border border-purple-500/70 shadow-xs transition cursor-pointer"
                 title="Watch Complete System Video Tour covering all 8 users and core functionalities"
               >
                 <Video className="w-3.5 h-3.5 text-purple-300 animate-pulse" />
                 <span className="hidden sm:inline">🎬 System Video Tour</span>
-                <span className="sm:hidden">🎬 Tour</span>
-              </button>
+                              </button>
             )}
 
             {/* Switch to Doctor Station */}

@@ -36,6 +36,7 @@ import { authService } from '../../services/authService';
 import { ondcNetworkService } from '../../services/ondcNetworkService';
 import { OndcVendorOnboardingModal } from '../ondc/OndcVendorOnboardingModal';
 import { CareGapNudgesPanel } from '../opd/CareGapNudgesPanel';
+import { PortalSidebarLayout } from '../layout/PortalSidebarLayout';
 import { getCareGapNudges, lastNudge } from '../../services/careGapNudges';
 import { Send as SendIcon } from 'lucide-react';
 import { DoctorProfile, HospitalRoom, DiagnosticLabConfig, OpdPatient } from '../../types';
@@ -155,6 +156,33 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ onNavigateToPo
         </div>
       )}
 
+      <PortalSidebarLayout
+        activeId={activeTab}
+        onSelect={id => setActiveTab(id as typeof activeTab)}
+        header={
+          <div className="space-y-0.5">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-rose-700">Administration</div>
+            <div className="text-sm font-extrabold text-slate-900 truncate">St. Anne Hospital</div>
+            <div className="text-[11px] text-slate-500 truncate">Medical Superintendent</div>
+          </div>
+        }
+        groups={[
+          { heading: 'People & spaces', items: [
+            { id: 'doctors', label: 'Doctors', icon: Stethoscope, badge: doctors.length },
+            { id: 'rooms', label: 'Rooms', icon: DoorOpen, badge: rooms.length },
+            { id: 'patients', label: 'Patients', icon: Users, badge: patients.length },
+          ]},
+          { heading: 'Patient follow-through', items: [
+            { id: 'caregaps', label: 'Care Gaps & Nudges', icon: SendIcon, badge: getCareGapNudges(opdStore.getAllVisitedPatients()).filter(n => !lastNudge(n)).length, badgeTone: 'rose' },
+          ]},
+          { heading: 'Network & integrations', items: [
+            { id: 'labs', label: 'Labs', icon: TestTubes, badge: labs.length },
+            { id: 'ondc', label: 'ONDC Vendors', icon: Globe, badge: ondcNodes.filter(n => n.type === 'BPP').length },
+            { id: 'backbone', label: 'Integration Backbone', icon: Zap },
+          ]},
+        ]}
+      >
+        <div className="space-y-6">
       {/* Facility Overview Header */}
       <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100">
@@ -220,93 +248,6 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ onNavigateToPo
             <span className="text-2xl font-bold text-emerald-600 mt-0.5 block">Active</span>
           </div>
         </div>
-      </div>
-
-      {/* Admin Navigation Tabs */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-slate-200">
-        <button
-          onClick={() => setActiveTab('doctors')}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg font-semibold text-xs transition cursor-pointer shrink-0 ${
-            activeTab === 'doctors'
-              ? 'bg-rose-700 text-white shadow-xs'
-              : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
-          }`}
-        >
-          <Stethoscope className="w-3.5 h-3.5" />
-          <span>Doctors ({doctors.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('rooms')}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg font-semibold text-xs transition cursor-pointer shrink-0 ${
-            activeTab === 'rooms'
-              ? 'bg-rose-700 text-white shadow-xs'
-              : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
-          }`}
-        >
-          <DoorOpen className="w-3.5 h-3.5" />
-          <span>Rooms ({rooms.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('patients')}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg font-semibold text-xs transition cursor-pointer shrink-0 ${
-            activeTab === 'patients'
-              ? 'bg-rose-700 text-white shadow-xs'
-              : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
-          }`}
-        >
-          <Users className="w-3.5 h-3.5" />
-          <span>Patients ({patients.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('caregaps')}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg font-semibold text-xs transition cursor-pointer shrink-0 ${
-            activeTab === 'caregaps'
-              ? 'bg-rose-700 text-white shadow-xs'
-              : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
-          }`}
-        >
-          <SendIcon className="w-3.5 h-3.5" />
-          <span>Care Gaps ({getCareGapNudges(opdStore.getAllVisitedPatients()).filter(n => !lastNudge(n)).length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('labs')}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg font-semibold text-xs transition cursor-pointer shrink-0 ${
-            activeTab === 'labs'
-              ? 'bg-rose-700 text-white shadow-xs'
-              : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
-          }`}
-        >
-          <TestTubes className="w-3.5 h-3.5" />
-          <span>Labs ({labs.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('ondc')}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg font-semibold text-xs transition cursor-pointer shrink-0 ${
-            activeTab === 'ondc'
-              ? 'bg-indigo-700 text-white shadow-xs'
-              : 'bg-white text-indigo-900 hover:bg-indigo-50 border border-indigo-200'
-          }`}
-        >
-          <Globe className="w-3.5 h-3.5 text-indigo-500" />
-          <span>ONDC Vendors ({ondcNodes.filter(n => n.type === 'BPP').length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('backbone')}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg font-semibold text-xs transition cursor-pointer shrink-0 ${
-            activeTab === 'backbone'
-              ? 'bg-slate-900 text-white shadow-xs'
-              : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
-          }`}
-        >
-          <Zap className="w-3.5 h-3.5 text-rose-400" />
-          <span>Integration Backbone</span>
-        </button>
       </div>
 
       {/* TAB 1: DOCTORS */}
@@ -1079,6 +1020,9 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ onNavigateToPo
           </div>
         </div>
       )}
+
+        </div>
+      </PortalSidebarLayout>
 
       {/* MODAL 1: ADD NEW DOCTOR */}
       {showAddDoctorModal && (
