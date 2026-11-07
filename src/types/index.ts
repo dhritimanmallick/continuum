@@ -1,4 +1,4 @@
-export type PortalType = 'OPD' | 'LAB' | 'PHARMA' | 'ADMIN' | 'VICINITY' | 'REVENUES' | 'CARE_GAPS';
+export type PortalType = 'OPD' | 'LAB' | 'PHARMA' | 'ADMIN' | 'VICINITY' | 'REVENUES';
 export type OpdRole = 'RECEPTION' | 'DOCTOR';
 export type OpdUserRole = 'ADMIN' | 'RECEPTION' | 'DOCTOR' | 'LAB' | 'PHARMA' | 'PATIENT';
 
