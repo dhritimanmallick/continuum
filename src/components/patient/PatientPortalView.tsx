@@ -19,7 +19,8 @@ import {
   Navigation,
   MapPin,
   Video,
-  Stethoscope
+  Stethoscope,
+  CalendarDays
 } from 'lucide-react';
 import { AuthUser, OpdPatient, FamilyMember, MaternalTestProtocol, VaccineScheduleItem } from '../../types';
 import { opdStore } from '../../services/opdStore';
@@ -41,6 +42,7 @@ import { PatientSchedulesPanel } from './PatientSchedulesPanel';
 import { DoctorWhatsAppMessagesFeed } from './DoctorWhatsAppMessagesFeed';
 import { AbhaHealthLockerPanel } from './AbhaHealthLockerPanel';
 import { CultPatientDashboard } from './CultPatientDashboard';
+import { PortalSidebarLayout } from '../layout/PortalSidebarLayout';
 
 interface PatientPortalViewProps {
   currentUser: AuthUser;
@@ -129,7 +131,7 @@ export const PatientPortalView: React.FC<PatientPortalViewProps> = ({
         </div>
 
         {/* Main Navbar Bar */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <img 
               src="/vyuhaa-logo.png" 
@@ -215,179 +217,53 @@ export const PatientPortalView: React.FC<PatientPortalViewProps> = ({
           </div>
         </div>
 
-        {/* Navigation Tabs Bar */}
-        <div className="border-t border-slate-200 bg-[#fbfaf9] px-4 sm:px-6 lg:px-8 overflow-x-auto">
-          <div className="max-w-7xl mx-auto flex items-center gap-1 py-2 text-xs font-bold">
-            <button
-              onClick={() => setActiveTab('OVERVIEW')}
-              className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'OVERVIEW' 
-                  ? 'bg-rose-700 text-white shadow-xs' 
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              <span>🏡 Dashboard</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('DOCTORS_ESTIMATES')}
-              className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'DOCTORS_ESTIMATES' 
-                  ? 'bg-rose-700 text-white shadow-xs' 
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              <span>👨‍⚕️ Doctors &amp; Estimates</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('MY_SCHEDULE')}
-              className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'MY_SCHEDULE' 
-                  ? 'bg-rose-700 text-white shadow-xs' 
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              <span>📅 My Schedules</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('WHATSAPP_FEED')}
-              className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'WHATSAPP_FEED' 
-                  ? 'bg-emerald-700 text-white shadow-xs' 
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
-              <span>💬 Doctor WhatsApp</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('ABHA_RECORDS')}
-              className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'ABHA_RECORDS' 
-                  ? 'bg-emerald-700 text-white shadow-xs' 
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-              <span>🛡️ ABHA Health Locker</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('FAMILY')}
-              className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'FAMILY' 
-                  ? 'bg-rose-700 text-white shadow-xs' 
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              <Users className="w-3.5 h-3.5" />
-              <span>Family Circle ({familyMembers.length})</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('LIBRARY_AI')}
-              className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'LIBRARY_AI' 
-                  ? 'bg-rose-700 text-white shadow-xs' 
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              <BookOpen className="w-3.5 h-3.5" />
-              <span>Library &amp; AI Counsellor</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('COSTS')}
-              className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'COSTS' 
-                  ? 'bg-rose-700 text-white shadow-xs' 
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              <Calculator className="w-3.5 h-3.5" />
-              <span>Treatment Costs &amp; Quotes</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('VICINITY_MAP')}
-              className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'VICINITY_MAP' 
-                  ? 'bg-rose-700 text-white shadow-xs font-bold' 
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              <Navigation className="w-3.5 h-3.5 text-amber-300" />
-              <span>🗺️ Vicinity Map &amp; Costs</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('TELE_COUNSELLING')}
-              className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'TELE_COUNSELLING' 
-                  ? 'bg-rose-700 text-white shadow-xs' 
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              <PhoneCall className="w-3.5 h-3.5 text-emerald-400" />
-              <span>5-Min Doctor Call</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('LABOUR_TRACKER')}
-              className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'LABOUR_TRACKER' 
-                  ? 'bg-rose-700 text-white shadow-xs' 
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              <Baby className="w-3.5 h-3.5 text-pink-300" />
-              <span>Labour Live Tracker</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('VACCINES_TESTS')}
-              className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'VACCINES_TESTS' 
-                  ? 'bg-rose-700 text-white shadow-xs' 
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              <Syringe className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Vaccinations &amp; Tests</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('CARE_JOURNEY')}
-              className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'CARE_JOURNEY' 
-                  ? 'bg-rose-700 text-white shadow-xs' 
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              <Award className="w-3.5 h-3.5 text-amber-400" />
-              <span>My Care Journey</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('NOTIFICATIONS')}
-              className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'NOTIFICATIONS' 
-                  ? 'bg-rose-700 text-white shadow-xs' 
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              <Bell className="w-3.5 h-3.5" />
-              <span>Notifications</span>
-            </button>
-          </div>
-        </div>
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 space-y-6">
+      <main className="flex-1 max-w-[1440px] mx-auto w-full p-4 sm:p-6 lg:p-8 space-y-6">
+        <PortalSidebarLayout
+          activeId={activeTab}
+          onSelect={id => setActiveTab(id as PatientPortalTab)}
+          header={
+            <div className="space-y-0.5">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-rose-700">
+                {patient.isPregnant && patient.pregnancyDetails?.gestationalAgeWeeks ? `Week ${patient.pregnancyDetails.gestationalAgeWeeks}` : 'My health'}
+              </div>
+              <div className="text-sm font-extrabold text-slate-900 truncate">{patient.name}</div>
+              <div className="text-[11px] text-slate-500 truncate">{patient.assignedDoctor || 'Dr. Anita Rao'} · St. Anne</div>
+            </div>
+          }
+          groups={[
+            { heading: 'My care', items: [
+              { id: 'OVERVIEW', label: 'Dashboard', icon: Heart },
+              { id: 'MY_SCHEDULE', label: 'My Schedule', icon: CalendarDays },
+              { id: 'VACCINES_TESTS', label: 'Vaccinations & Tests', icon: Syringe },
+              { id: 'CARE_JOURNEY', label: 'My Care Journey', icon: Award },
+              { id: 'NOTIFICATIONS', label: 'Notifications', icon: Bell },
+            ]},
+            { heading: 'My doctor & records', items: [
+              { id: 'WHATSAPP_FEED', label: 'Doctor WhatsApp', icon: MessageCircle },
+              { id: 'ABHA_RECORDS', label: 'ABHA Health Locker', icon: ShieldCheck },
+              { id: 'DOCTORS_ESTIMATES', label: 'Doctors & Booking', icon: Stethoscope },
+              { id: 'TELE_COUNSELLING', label: '5-Min Doctor Call', icon: PhoneCall },
+            ]},
+            { heading: 'Pregnancy & delivery', items: [
+              { id: 'LABOUR_TRACKER', label: 'Labour Live Tracker', icon: Baby },
+              { id: 'LIBRARY_AI', label: 'Library & AI Counsellor', icon: BookOpen },
+            ]},
+            { heading: 'Family & costs', items: [
+              { id: 'FAMILY', label: 'Family Circle', icon: Users, badge: familyMembers.length },
+              { id: 'COSTS', label: 'Treatment Costs', icon: Calculator },
+              { id: 'VICINITY_MAP', label: 'Nearby Labs & Pharmacies', icon: MapPin },
+            ]},
+          ]}
+          footer={
+            <a href="tel:108" className="flex items-center justify-center gap-1.5 w-full px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold transition">
+              <AlertTriangle className="w-3.5 h-3.5" /> Emergency 108
+            </a>
+          }
+        >
+          <div className="space-y-6">
 
         {/* TAB 0: OVERVIEW DASHBOARD (CLEAN & LIGHT PATIENT INTERFACE) */}
         {activeTab === 'OVERVIEW' && (
@@ -769,6 +645,8 @@ export const PatientPortalView: React.FC<PatientPortalViewProps> = ({
           </div>
         )}
 
+                </div>
+        </PortalSidebarLayout>
       </main>
 
       {/* Auxiliary Modals */}
@@ -826,7 +704,7 @@ export const PatientPortalView: React.FC<PatientPortalViewProps> = ({
 
       {/* Footer */}
       <footer className="mt-auto border-t border-slate-200 bg-white py-4 text-center text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div className="max-w-[1440px] mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>St. Anne Mother &amp; Child Hospital &bull; Continuum Maternal &amp; Family Care Portal</span>
           <span className="text-[11px] text-slate-400">
             Compliant with ABDM, NDHM and Personal Health Data Privacy Standards
