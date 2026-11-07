@@ -484,139 +484,90 @@ export interface SimulationResultItem {
   clinicalRationale?: string;
 }
 
+/** Convert a rule trigger/grace to a window in days. Rules may be written in weeks or days. */
+function ruleWindowDays(rule: CareGapRule): { start: number; end: number; grace: number } {
+  const t: any = rule.trigger;
+  const o: any = rule.overdue_after || {};
+  const start = t.start_weeks !== undefined ? t.start_weeks * 7 : (t.days ?? 0);
+  const end = t.end_weeks !== undefined ? t.end_weeks * 7 : start;
+  const grace = (o.weeks ?? 0) * 7 + (o.days ?? 0);
+  return { start, end, grace };
+}
+
+const fmtDays = (d: number, unit: 'weeks' | 'days') =>
+  unit === 'weeks' ? `${+(d / 7).toFixed(1)} weeks` : `${Math.round(d)} days`;
+
+function conditionMet(rule: CareGapRule, flags: string[] = []): boolean {
+  const c = (rule.trigger as any).condition;
+  const f = flags.map(x => x.toLowerCase());
+  if (!c) return true;
+  if (c === 'rh_negative') return f.some(x => x.includes('rh negative'));
+  if (c === 'flagged_small_or_high_risk') return f.some(x => x.includes('small') || x.includes('growth') || x.includes('high risk'));
+  if (c === 'gdm_history') return f.some(x => x.includes('gdm'));
+  return f.some(x => x.includes(String(c).replace(/_/g, ' ')));
+}
+
+/**
+ * Evaluate the active rules for one simulated patient.
+ * Status: NOT_DUE before the window opens; DUE from window start through window end + grace
+ * (rule.overdue_after); OVERDUE after that; COMPLETED when the action is recorded.
+ */
 export function runRuleSimulation(input: SimulationInput, rules: CareGapRule[] = INITIAL_RULES): SimulationResultItem[] {
   const results: SimulationResultItem[] = [];
 
+  const pathway: Record<SimulationInput['patientType'], string[]> = {
+    pregnancy: ['antenatal', 'foetal'],
+    mother: ['postnatal'],
+    newborn: ['newborn', 'child'],
+    child: ['newborn', 'child'],
+  };
+
+  // Current age on the pathway, in days
+  let nowDays = 0;
+  let unit: 'weeks' | 'days' = 'weeks';
+  let ageLabel = '';
+  if (input.patientType === 'pregnancy') {
+    nowDays = (input.gestationalAgeWeeks ?? 0) * 7;
+    ageLabel = `gestation ${input.gestationalAgeWeeks ?? 0} weeks`;
+  } else if (input.patientType === 'mother') {
+    nowDays = input.postpartumDays ?? 0;
+    unit = 'days';
+    ageLabel = `${nowDays} days postpartum`;
+  } else {
+    nowDays = input.childAgeWeeks !== undefined ? input.childAgeWeeks * 7 : 0;
+    ageLabel = `child age ${+(nowDays / 7).toFixed(1)} weeks`;
+  }
+
   for (const rule of rules.filter(r => r.active)) {
-    if (input.patientType === 'pregnancy' && (rule.category === 'antenatal' || rule.category === 'foetal')) {
-      const currentWeeks = input.gestationalAgeWeeks || 0;
-      const start = rule.trigger.start_weeks ?? 0;
-      const end = rule.trigger.end_weeks ?? 0;
-      const overdueGrace = rule.overdue_after.weeks ?? 2;
+    if (!pathway[input.patientType].includes(rule.category)) continue;
+    if (!conditionMet(rule, input.flags)) continue;
 
-      // Condition filter
-      if (rule.trigger.condition === 'rh_negative' && !input.flags?.includes('Rh negative')) {
-        continue;
-      }
-      if (rule.trigger.condition === 'flagged_small_or_high_risk' && !input.flags?.some(f => f.toLowerCase().includes('small') || f.toLowerCase().includes('growth'))) {
-        continue;
-      }
+    const { start, end, grace } = ruleWindowDays(rule);
+    const ruleUnit: 'weeks' | 'days' = (rule.trigger as any).start_weeks !== undefined ? 'weeks' : 'days';
+    const windowLabel = start === end ? `at ${fmtDays(start, ruleUnit)}` : `${fmtDays(start, ruleUnit)}–${fmtDays(end, ruleUnit)}`;
+    const base = {
+      ruleId: rule.rule_id,
+      ruleName: rule.name,
+      category: rule.category,
+      expectedWindow: windowLabel,
+      requiredAction: rule.required_action,
+      clinicalRationale: rule.clinicalRationale,
+    };
 
-      const isCompleted = input.recordedMilestones?.includes(rule.rule_id || '');
-      if (isCompleted) {
-        results.push({
-          ruleId: rule.rule_id,
-          ruleName: rule.name,
-          category: rule.category,
-          expectedWindow: `${start}–${end} weeks`,
-          status: 'COMPLETED',
-          overdueDuration: 'Closed',
-          plainReason: `${rule.name} recorded. Care gap closed on recorded action.`,
-          requiredAction: rule.required_action,
-          clinicalRationale: rule.clinicalRationale
-        });
-        continue;
-      }
-
-      if (currentWeeks < start) {
-        results.push({
-          ruleId: rule.rule_id,
-          ruleName: rule.name,
-          category: rule.category,
-          expectedWindow: `${start}–${end} weeks`,
-          status: 'NOT_DUE',
-          overdueDuration: 'Not due',
-          plainReason: `Expected between ${start}–${end} weeks. Current gestation is ${currentWeeks} weeks.`,
-          requiredAction: rule.required_action,
-          clinicalRationale: rule.clinicalRationale
-        });
-      } else if (currentWeeks >= start && currentWeeks <= end) {
-        results.push({
-          ruleId: rule.rule_id,
-          ruleName: rule.name,
-          category: rule.category,
-          expectedWindow: `${start}–${end} weeks`,
-          status: 'DUE',
-          overdueDuration: 'Due now',
-          plainReason: `${rule.name} is due within current window (${start}–${end} weeks). Gestation: ${currentWeeks} weeks.`,
-          requiredAction: rule.required_action,
-          clinicalRationale: rule.clinicalRationale
-        });
-      } else {
-        const overdueWeeks = currentWeeks - end;
-        results.push({
-          ruleId: rule.rule_id,
-          ruleName: rule.name,
-          category: rule.category,
-          expectedWindow: `${start}–${end} weeks`,
-          status: 'OVERDUE',
-          overdueDuration: `+${overdueWeeks} wks`,
-          plainReason: `${rule.display_reason}. Expected between ${start}–${end} weeks. Patient is currently ${currentWeeks} weeks. Overdue by ${overdueWeeks} week${overdueWeeks > 1 ? 's' : ''}.`,
-          requiredAction: rule.required_action,
-          clinicalRationale: rule.clinicalRationale
-        });
-      }
-    }
-
-    if (input.patientType === 'child' && (rule.category === 'child' || rule.category === 'newborn')) {
-      const childWeeks = input.childAgeWeeks || 0;
-      const start = rule.trigger.start_weeks ?? 0;
-      const end = rule.trigger.end_weeks ?? start;
-      const isCompleted = input.recordedMilestones?.includes(rule.rule_id || '');
-
-      if (isCompleted) {
-        results.push({
-          ruleId: rule.rule_id,
-          ruleName: rule.name,
-          category: rule.category,
-          expectedWindow: `${start} weeks`,
-          status: 'COMPLETED',
-          overdueDuration: 'Closed',
-          plainReason: `${rule.name} recorded.`,
-          requiredAction: rule.required_action,
-          clinicalRationale: rule.clinicalRationale
-        });
-        continue;
-      }
-
-      if (childWeeks < start) {
-        results.push({
-          ruleId: rule.rule_id,
-          ruleName: rule.name,
-          category: rule.category,
-          expectedWindow: `${start} weeks`,
-          status: 'NOT_DUE',
-          overdueDuration: 'Not due',
-          plainReason: `Expected at ${start} weeks. Child is currently ${childWeeks} weeks.`,
-          requiredAction: rule.required_action,
-          clinicalRationale: rule.clinicalRationale
-        });
-      } else if (childWeeks === start) {
-        results.push({
-          ruleId: rule.rule_id,
-          ruleName: rule.name,
-          category: rule.category,
-          expectedWindow: `${start} weeks`,
-          status: 'DUE',
-          overdueDuration: 'Due now',
-          plainReason: `${rule.name} is due at ${start} weeks. Child is ${childWeeks} weeks.`,
-          requiredAction: rule.required_action,
-          clinicalRationale: rule.clinicalRationale
-        });
-      } else {
-        const diff = childWeeks - start;
-        results.push({
-          ruleId: rule.rule_id,
-          ruleName: rule.name,
-          category: rule.category,
-          expectedWindow: `${start} weeks`,
-          status: 'OVERDUE',
-          overdueDuration: `+${diff} wks`,
-          plainReason: `${rule.display_reason}. Expected at ${start} weeks. Child is currently ${childWeeks} weeks. Overdue by ${diff} week${diff > 1 ? 's' : ''}.`,
-          requiredAction: rule.required_action,
-          clinicalRationale: rule.clinicalRationale
-        });
-      }
+    if (input.recordedMilestones?.includes(rule.rule_id || '')) {
+      results.push({ ...base, status: 'COMPLETED', overdueDuration: 'Closed',
+        plainReason: `${rule.name} recorded. Care gap closed on recorded action.` });
+    } else if (nowDays < start) {
+      results.push({ ...base, status: 'NOT_DUE', overdueDuration: 'Not due',
+        plainReason: `Expected ${windowLabel}. Currently ${ageLabel}.` });
+    } else if (nowDays <= end + grace) {
+      const inGrace = nowDays > end;
+      results.push({ ...base, status: 'DUE', overdueDuration: inGrace ? 'Due (grace period)' : 'Due now',
+        plainReason: `${rule.name} is due (${windowLabel}${grace ? `, grace ${fmtDays(grace, ruleUnit === 'weeks' && grace % 7 === 0 ? 'weeks' : 'days')}` : ''}). Currently ${ageLabel}.` });
+    } else {
+      const late = nowDays - end;
+      results.push({ ...base, status: 'OVERDUE', overdueDuration: `+${fmtDays(late, unit === 'days' || ruleUnit === 'days' ? 'days' : 'weeks')}`,
+        plainReason: `${rule.display_reason}. Expected ${windowLabel}; currently ${ageLabel}. Window closed ${fmtDays(late, unit === 'days' || ruleUnit === 'days' ? 'days' : 'weeks')} ago, past the grace period.` });
     }
   }
 

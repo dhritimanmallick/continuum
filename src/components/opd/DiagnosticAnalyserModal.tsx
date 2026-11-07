@@ -210,9 +210,9 @@ export const DiagnosticAnalyserModal: React.FC<DiagnosticAnalyserModalProps> = (
                     )}
                     <span className="font-extrabold uppercase tracking-wide text-[11px]">
                       {analysis.overallStatus === 'CRITICAL_ALERT'
-                        ? 'Critical Diagnostic Alert Detected'
+                        ? 'Critical Value Flagged for Review'
                         : analysis.overallStatus === 'ATTENTION_NEEDED'
-                        ? 'Diagnostic Variance Requiring Clinical Action'
+                        ? 'Values Outside Reference Range · For Clinician Review'
                         : 'Physiological Harmony · Within Reference Limits'}
                     </span>
                   </div>
@@ -268,7 +268,7 @@ export const DiagnosticAnalyserModal: React.FC<DiagnosticAnalyserModalProps> = (
                       <div className="bg-purple-50 p-3 rounded-xl border border-purple-200 flex items-center justify-between text-purple-950 font-bold">
                         <span>Calculated Mentzer Index (MCV / RBC):</span>
                         <span className="font-mono text-sm px-2 py-0.5 rounded bg-white border border-purple-300">
-                          {analysis.mentzerIndex} ({analysis.mentzerIndex > 13 ? '> 13 Iron Deficiency' : '<= 13 Thalassemia screen'})
+                          {analysis.mentzerIndex} ({analysis.mentzerIndex > 13 ? '> 13: iron-deficiency pattern' : '≤ 13: thalassaemia-trait pattern'})
                         </span>
                       </div>
                     )}
@@ -325,13 +325,16 @@ export const DiagnosticAnalyserModal: React.FC<DiagnosticAnalyserModalProps> = (
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 font-extrabold uppercase tracking-wide text-xs">
                     <Stethoscope className="w-4 h-4 text-purple-300" />
-                    <span>Actionable Clinical Protocols for Referring Doctor</span>
+                    <span>Protocol Reference Points for the Treating Doctor</span>
                   </div>
                   <span className="text-[10px] bg-purple-800 px-2.5 py-0.5 rounded-full text-purple-200">
                     ACOG / FOGSI Protocols
                   </span>
                 </div>
 
+                <p className="text-[11px] text-purple-200">
+                  Reference points from published protocols, not orders. The treating doctor decides; the reporting pathologist signs off the report.
+                </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
                   {analysis.actionRecommendations.map((act, idx) => (
                     <div key={idx} className="bg-white/10 p-2.5 rounded-xl border border-white/10 flex items-start gap-2">

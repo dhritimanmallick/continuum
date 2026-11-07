@@ -24,6 +24,8 @@ import { OpdPatient, OpdClinic } from '../../types';
 import { opdStore, OPD_CLINICS } from '../../services/opdStore';
 import { PatientDatabaseView } from './PatientDatabaseView';
 import { ScanPrescriptionModal } from './ScanPrescriptionModal';
+import { CareGapNudgesPanel } from './CareGapNudgesPanel';
+import { getCareGapNudges, lastNudge } from '../../services/careGapNudges';
 
 interface ReceptionViewProps {
   onOpenNewPatientModal: () => void;
@@ -37,7 +39,7 @@ export const ReceptionView: React.FC<ReceptionViewProps> = ({
   onSelectPatient
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [receptionViewMode, setReceptionViewMode] = useState<'QUEUE' | 'DATABASE'>('QUEUE');
+  const [receptionViewMode, setReceptionViewMode] = useState<'QUEUE' | 'DATABASE' | 'CARE_GAPS'>('QUEUE');
   const [isScanRxModalOpen, setIsScanRxModalOpen] = useState(false);
   const [selectedScanPatient, setSelectedScanPatient] = useState<OpdPatient | null>(null);
 
@@ -56,6 +58,8 @@ export const ReceptionView: React.FC<ReceptionViewProps> = ({
     }
     return true;
   });
+
+  const pendingNudges = getCareGapNudges(clinicPatients).filter(n => !lastNudge(n)).length;
 
   const handleOpenScanRx = (patient?: OpdPatient) => {
     setSelectedScanPatient(patient || null);
@@ -85,7 +89,7 @@ export const ReceptionView: React.FC<ReceptionViewProps> = ({
           {/* Action Buttons */}
           <div className="flex flex-wrap items-center gap-2.5">
             <button
-              onClick={() => setReceptionViewMode(receptionViewMode === 'QUEUE' ? 'DATABASE' : 'QUEUE')}
+              onClick={() => setReceptionViewMode(receptionViewMode === 'DATABASE' ? 'QUEUE' : 'DATABASE')}
               className={`inline-flex items-center gap-2 px-4 py-2.5 border font-extrabold text-xs rounded-2xl shadow-2xs transition cursor-pointer active:scale-95 ${
                 receptionViewMode === 'DATABASE'
                   ? 'bg-rose-800 text-white border-rose-900'
@@ -137,11 +141,34 @@ export const ReceptionView: React.FC<ReceptionViewProps> = ({
               </button>
             ))}
           </div>
+          <button
+              onClick={() => setReceptionViewMode(receptionViewMode === 'CARE_GAPS' ? 'QUEUE' : 'CARE_GAPS')}
+              className={`ml-auto inline-flex items-center gap-2 px-4 py-1.5 border font-extrabold text-xs rounded-2xl shadow-2xs transition cursor-pointer active:scale-95 ${
+                receptionViewMode === 'CARE_GAPS'
+                  ? 'bg-rose-800 text-white border-rose-900'
+                  : 'bg-white hover:bg-rose-50 text-slate-800 border-rose-200'
+              }`}
+              title="Patients to nudge for tests, medicines, follow-ups and vaccinations"
+            >
+              <Send className={`w-4 h-4 ${receptionViewMode === 'CARE_GAPS' ? 'text-rose-200' : 'text-rose-600'}`} />
+              <span>{receptionViewMode === 'CARE_GAPS' ? "← Today's Queue" : 'Care Gaps'}</span>
+              {receptionViewMode !== 'CARE_GAPS' && pendingNudges > 0 && (
+                <span className="text-[10px] bg-rose-600 text-white px-1.5 rounded-full font-bold">{pendingNudges}</span>
+              )}
+            </button>
         </div>
       </div>
 
       {/* Main Reception Workspace: Database or Active Queue */}
-      {receptionViewMode === 'DATABASE' ? (
+      {receptionViewMode === 'CARE_GAPS' ? (
+        <CareGapNudgesPanel
+          patients={clinicPatients}
+          scopeLabel={selectedClinic.name}
+          sentBy={`${selectedClinic.receptionistName || 'Reception'} (Reception)`}
+          onOpenWhatsAppView={onOpenWhatsAppView}
+          onSelectPatient={onSelectPatient}
+        />
+      ) : receptionViewMode === 'DATABASE' ? (
         <PatientDatabaseView 
           onOpenWhatsAppView={onOpenWhatsAppView}
           onSelectPatient={onSelectPatient}

@@ -35,14 +35,18 @@ import { integrationBackbone } from '../../services/integrationBackbone';
 import { authService } from '../../services/authService';
 import { ondcNetworkService } from '../../services/ondcNetworkService';
 import { OndcVendorOnboardingModal } from '../ondc/OndcVendorOnboardingModal';
+import { CareGapNudgesPanel } from '../opd/CareGapNudgesPanel';
+import { getCareGapNudges, lastNudge } from '../../services/careGapNudges';
+import { Send as SendIcon } from 'lucide-react';
 import { DoctorProfile, HospitalRoom, DiagnosticLabConfig, OpdPatient } from '../../types';
 
 interface AdminPortalViewProps {
   onNavigateToPortal?: (portal: 'OPD' | 'LAB' | 'PHARMA', role?: 'RECEPTION' | 'DOCTOR') => void;
+  onOpenWhatsAppView?: (patientId?: string) => void;
 }
 
-export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ onNavigateToPortal }) => {
-  const [activeTab, setActiveTab] = useState<'doctors' | 'rooms' | 'patients' | 'labs' | 'ondc' | 'backbone'>('doctors');
+export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ onNavigateToPortal, onOpenWhatsAppView }) => {
+  const [activeTab, setActiveTab] = useState<'doctors' | 'rooms' | 'patients' | 'caregaps' | 'labs' | 'ondc' | 'backbone'>('doctors');
   
   // Doctors state
   const doctors = opdStore.getDoctorProfiles();
@@ -254,6 +258,18 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ onNavigateToPo
         >
           <Users className="w-3.5 h-3.5" />
           <span>Patients ({patients.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('caregaps')}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg font-semibold text-xs transition cursor-pointer shrink-0 ${
+            activeTab === 'caregaps'
+              ? 'bg-rose-700 text-white shadow-xs'
+              : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
+          }`}
+        >
+          <SendIcon className="w-3.5 h-3.5" />
+          <span>Care Gaps ({getCareGapNudges(opdStore.getAllVisitedPatients()).filter(n => !lastNudge(n)).length})</span>
         </button>
 
         <button
@@ -627,6 +643,15 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ onNavigateToPo
       )}
 
       {/* TAB 4: DIAGNOSTIC LABS & ROUTING SLAS */}
+      {activeTab === 'caregaps' && (
+        <CareGapNudgesPanel
+          patients={opdStore.getAllVisitedPatients()}
+          scopeLabel="All OPD rooms"
+          sentBy="Hospital Administration"
+          onOpenWhatsAppView={id => onOpenWhatsAppView?.(id)}
+        />
+      )}
+
       {activeTab === 'labs' && (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">

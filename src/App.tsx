@@ -220,6 +220,7 @@ export default function App() {
               handlePortalChange(portal);
               if (role) handleOpdRoleChange(role);
             }}
+            onOpenWhatsAppView={handleOpenWhatsAppView}
           />
         )}
 
