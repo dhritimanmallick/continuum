@@ -109,8 +109,8 @@ export const PatientPortalView: React.FC<PatientPortalViewProps> = ({
         <div className="bg-gradient-to-r from-rose-950 via-slate-900 to-purple-950 text-white px-4 sm:px-6 py-2 text-xs flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="font-semibold text-rose-200">St. Anne Mother &amp; Child Hospital</span>
-            <span className="text-slate-400 hidden sm:inline">• Patient &amp; Family Care Portal</span>
+            <span className="font-semibold text-rose-200">Continuum Healthcare Network</span>
+            <span className="text-slate-400 hidden sm:inline">• Vicinity Hospitals, Diagnostic Labs &amp; Unified ABHA Storage</span>
           </div>
 
           <div className="flex items-center gap-3">
@@ -827,7 +827,7 @@ export const PatientPortalView: React.FC<PatientPortalViewProps> = ({
       {/* Footer */}
       <footer className="mt-auto border-t border-slate-200 bg-white py-4 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>St. Anne Mother &amp; Child Hospital &bull; Continuum Maternal &amp; Family Care Portal</span>
+          <span>Continuum Maternal &amp; Family Care Portal &bull; Constant ABHA Data Storage Across All Vicinity Hospitals</span>
           <span className="text-[11px] text-slate-400">
             Compliant with ABDM, NDHM and Personal Health Data Privacy Standards
           </span>

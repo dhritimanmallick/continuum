@@ -23,11 +23,18 @@ import {
   Baby, 
   Navigation,
   Info,
-  Heart
+  Heart,
+  Building2
 } from 'lucide-react';
 import { OpdPatient } from '../../types';
 import { opdStore } from '../../services/opdStore';
 import { VICINITY_COST_OPTIONS, VicinityCostOption } from '../vicinity/GoogleMapsVicinityTracker';
+import { 
+  multiHospitalConsentService, 
+  VicinityHealthCenter, 
+  VICINITY_HEALTH_CENTERS 
+} from '../../services/multiHospitalConsentService';
+import { AbhaMultiHospitalConsentModal } from './AbhaMultiHospitalConsentModal';
 
 export interface PatientOverviewDashboardProps {
   patient: OpdPatient;
@@ -50,6 +57,10 @@ export const PatientOverviewDashboard: React.FC<PatientOverviewDashboardProps> =
   onOpenAbhaLocker,
   onOpenSchedule
 }) => {
+  // Multi-Hospital & Vicinity Health Center state
+  const [selectedHospitalId, setSelectedHospitalId] = useState<string>('hosp-st-anne');
+  const [showAbhaConsentModal, setShowAbhaConsentModal] = useState<boolean>(false);
+
   // Booking widget category state
   const [bookingCategory, setBookingCategory] = useState<'DOCTOR' | 'LAB' | 'ONDC_PHARMA' | 'VIDEO'>('DOCTOR');
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>('doc-anita');
@@ -59,8 +70,8 @@ export const PatientOverviewDashboard: React.FC<PatientOverviewDashboardProps> =
   const [selectedSlot, setSelectedSlot] = useState<string>('10:30 AM');
   const [bookingConfirmedToast, setBookingConfirmedToast] = useState<string | null>(null);
 
-  // Vicinity partner tab filter (Doctors vs Path Labs vs ONDC Pharmacies)
-  const [vicinityTab, setVicinityTab] = useState<'LABS' | 'DOCTORS' | 'ONDC_PHARMA'>('LABS');
+  // Vicinity partner tab filter (Hospitals vs Path Labs vs Doctors vs ONDC Pharmacies)
+  const [vicinityTab, setVicinityTab] = useState<'HOSPITALS' | 'LABS' | 'DOCTORS' | 'ONDC_PHARMA'>('HOSPITALS');
 
   // Video guide player modal state
   const [activeVideoModal, setActiveVideoModal] = useState<{
@@ -292,18 +303,26 @@ export const PatientOverviewDashboard: React.FC<PatientOverviewDashboardProps> =
   // Handle instant booking
   const handleConfirmBooking = () => {
     let serviceName = '';
+    const currentHosp = multiHospitalConsentService.getHealthCenterById(selectedHospitalId);
     if (bookingCategory === 'DOCTOR') {
       const doc = doctorsList.find(d => d.id === selectedDoctorId);
-      serviceName = `OPD Consultation with ${doc?.name || 'Dr. Anita Rao'} (${doc?.room || 'Room 4'})`;
+      serviceName = `OPD Consultation with ${doc?.name || 'Specialist'} at ${currentHosp?.name || 'Medical Centre'}`;
+      multiHospitalConsentService.bookAppointment({
+        hospitalId: selectedHospitalId,
+        doctorName: doc?.name || 'Specialist',
+        serviceType: 'OB-GYN Clinical Consultation',
+        date: selectedDate,
+        slot: selectedSlot
+      });
     } else if (bookingCategory === 'LAB') {
       serviceName = `75g OGTT & CBC Blood Draw at Apex Diagnostics (Free Home Phlebotomy)`;
     } else if (bookingCategory === 'ONDC_PHARMA') {
       serviceName = `Jan Aushadhi Prescription Order (Tab Iron + Calcium 500mg) for 30-min delivery`;
     } else {
-      serviceName = `5-Min Urgent Doctor Tele-Video Call with Dr. Anita Rao`;
+      serviceName = `5-Min Urgent Doctor Tele-Video Call`;
     }
 
-    setBookingConfirmedToast(`Appointment confirmed! ${serviceName} on ${selectedDate} at ${selectedSlot}. Confirmation slip sent to WhatsApp.`);
+    setBookingConfirmedToast(`Appointment confirmed! ${serviceName} on ${selectedDate} at ${selectedSlot}. Confirmation slip and ABHA token dispatched to WhatsApp.`);
     setTimeout(() => setBookingConfirmedToast(null), 6000);
   };
 
@@ -348,18 +367,38 @@ export const PatientOverviewDashboard: React.FC<PatientOverviewDashboardProps> =
             </p>
 
             <div className="flex flex-wrap items-center gap-2 pt-2 text-xs text-slate-600 font-medium">
+              <div className="bg-slate-50 border border-slate-200 px-3 py-1 rounded-xl flex items-center gap-1.5 shadow-2xs">
+                <span className="text-slate-500 font-bold">🏥 Selected Care Center:</span>
+                <select
+                  value={selectedHospitalId}
+                  onChange={(e) => {
+                    setSelectedHospitalId(e.target.value);
+                    multiHospitalConsentService.setActiveHospital(e.target.value);
+                    const center = multiHospitalConsentService.getHealthCenterById(e.target.value);
+                    if (center && center.specialists.length > 0) {
+                      setSelectedDoctorId(center.specialists[0].id);
+                    }
+                    setBookingConfirmedToast(`Switched active care center to ${center?.name}. Your constant ABHA data remains securely synchronized.`);
+                  }}
+                  className="bg-transparent font-black text-rose-800 border-none focus:outline-none cursor-pointer"
+                >
+                  {VICINITY_HEALTH_CENTERS.map(h => (
+                    <option key={h.id} value={h.id}>{h.name} ({h.distanceKm} km)</option>
+                  ))}
+                </select>
+              </div>
+
               <span className="bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-xl">
-                🏥 Hospital: <strong>St. Anne Mother &amp; Child</strong>
+                👩‍⚕️ Attending: <strong>{multiHospitalConsentService.getHealthCenterById(selectedHospitalId)?.specialists[0]?.name || 'Dr. Anita Rao'}</strong>
               </span>
-              <span className="bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-xl">
-                👩‍⚕️ Primary: <strong>Dr. Anita Rao (OB/GYN)</strong>
-              </span>
+
               <button 
-                onClick={onOpenAbhaLocker}
-                className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-xl font-bold hover:bg-emerald-100 transition cursor-pointer flex items-center gap-1"
+                onClick={() => setShowAbhaConsentModal(true)}
+                className="bg-emerald-50 text-emerald-800 border border-emerald-300 px-3 py-1 rounded-xl font-bold hover:bg-emerald-100 transition cursor-pointer flex items-center gap-1.5 shadow-xs"
+                title="Manage federated ABHA consent across all vicinity hospitals"
               >
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                <span>ABHA: 91-8842-1049-2311@abdm</span>
+                <span>ABHA: 91-8842-1049-2311@abdm • Constant Health Locker</span>
               </button>
             </div>
           </div>
@@ -432,6 +471,50 @@ export const PatientOverviewDashboard: React.FC<PatientOverviewDashboardProps> =
               }`}
             >
               📹 5-Min Video Call
+            </button>
+          </div>
+        </div>
+
+        {/* Hospital Center Selector Bar */}
+        <div className="p-3 bg-rose-50/60 rounded-2xl border border-rose-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2">
+            <Building2 className="w-4 h-4 text-rose-700 shrink-0" />
+            <div>
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">Select Hospital / Medical Center in Vicinity:</span>
+              <span className="font-extrabold text-slate-900">
+                {multiHospitalConsentService.getHealthCenterById(selectedHospitalId)?.name} • {multiHospitalConsentService.getHealthCenterById(selectedHospitalId)?.distanceKm} km away
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <select
+              value={selectedHospitalId}
+              onChange={(e) => {
+                setSelectedHospitalId(e.target.value);
+                multiHospitalConsentService.setActiveHospital(e.target.value);
+                const hosp = multiHospitalConsentService.getHealthCenterById(e.target.value);
+                if (hosp && hosp.specialists.length > 0) {
+                  setSelectedDoctorId(hosp.specialists[0].id);
+                }
+              }}
+              className="text-xs font-bold bg-white border border-rose-300 rounded-xl px-3 py-1.5 focus:outline-rose-600 cursor-pointer shadow-xs"
+            >
+              {VICINITY_HEALTH_CENTERS.map(h => (
+                <option key={h.id} value={h.id}>
+                  {h.name} ({h.distanceKm} km • {h.type.replace('_', ' ')})
+                </option>
+              ))}
+            </select>
+
+            <button
+              type="button"
+              onClick={() => setShowAbhaConsentModal(true)}
+              className="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition cursor-pointer flex items-center gap-1 shrink-0 shadow-xs"
+              title="Ensure this hospital has active ABHA consent to view your constant medical history"
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>ABHA Consent</span>
             </button>
           </div>
         </div>
@@ -691,10 +774,18 @@ export const PatientOverviewDashboard: React.FC<PatientOverviewDashboardProps> =
 
           <div className="flex items-center gap-2">
             {/* Vicinity Category Tabs */}
-            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl text-xs font-bold">
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl text-xs font-bold overflow-x-auto">
+              <button
+                onClick={() => setVicinityTab('HOSPITALS')}
+                className={`px-3 py-1.5 rounded-xl transition cursor-pointer whitespace-nowrap ${
+                  vicinityTab === 'HOSPITALS' ? 'bg-white text-slate-950 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                🏥 Hospitals &amp; Clinics (6)
+              </button>
               <button
                 onClick={() => setVicinityTab('LABS')}
-                className={`px-3 py-1.5 rounded-xl transition cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl transition cursor-pointer whitespace-nowrap ${
                   vicinityTab === 'LABS' ? 'bg-white text-slate-950 shadow-xs' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
@@ -702,7 +793,7 @@ export const PatientOverviewDashboard: React.FC<PatientOverviewDashboardProps> =
               </button>
               <button
                 onClick={() => setVicinityTab('DOCTORS')}
-                className={`px-3 py-1.5 rounded-xl transition cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl transition cursor-pointer whitespace-nowrap ${
                   vicinityTab === 'DOCTORS' ? 'bg-white text-slate-950 shadow-xs' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
@@ -710,7 +801,7 @@ export const PatientOverviewDashboard: React.FC<PatientOverviewDashboardProps> =
               </button>
               <button
                 onClick={() => setVicinityTab('ONDC_PHARMA')}
-                className={`px-3 py-1.5 rounded-xl transition cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl transition cursor-pointer whitespace-nowrap ${
                   vicinityTab === 'ONDC_PHARMA' ? 'bg-white text-slate-950 shadow-xs' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
@@ -727,6 +818,94 @@ export const PatientOverviewDashboard: React.FC<PatientOverviewDashboardProps> =
             </button>
           </div>
         </div>
+
+        {/* TAB 0: HOSPITALS & MEDICAL CENTERS IN VICINITY */}
+        {vicinityTab === 'HOSPITALS' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {VICINITY_HEALTH_CENTERS.map(hosp => {
+              const consentGranted = multiHospitalConsentService.isConsentGrantedForHospital(hosp.id);
+              return (
+                <div 
+                  key={hosp.id}
+                  className="p-4 rounded-2xl border border-slate-200/90 hover:border-rose-300 hover:shadow-sm transition bg-white space-y-3 flex flex-col justify-between"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h3 className="text-xs sm:text-sm font-bold text-slate-900">{hosp.name}</h3>
+                        <p className="text-[11px] text-rose-700 font-bold">{hosp.categoryLabel}</p>
+                      </div>
+                      <div className="flex items-center gap-1 text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200 shrink-0">
+                        <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                        <span>{hosp.rating}</span>
+                      </div>
+                    </div>
+
+                    <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-xs space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-500 font-medium">Normal Delivery Est:</span>
+                        <span className="font-extrabold text-slate-900">₹{hosp.normalDeliveryEstInr.toLocaleString('en-IN')}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-500 font-medium">LSCS C-Section Est:</span>
+                        <span className="font-extrabold text-slate-900">₹{hosp.cSectionEstInr.toLocaleString('en-IN')}</span>
+                      </div>
+                      <div className="text-[10px] text-emerald-700 font-bold pt-0.5">
+                        {hosp.accreditation}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[11px] text-slate-500">
+                      <span className="flex items-center gap-1 font-medium">
+                        <MapPin className="w-3 h-3 text-slate-400" />
+                        <span>{hosp.distanceKm} km • {hosp.drivingEtaMinutes}m drive</span>
+                      </span>
+                      <span className="text-[10px] font-mono text-slate-500">
+                        {hosp.specialists.length} Specialists
+                      </span>
+                    </div>
+
+                    {/* ABHA Consent Status Indicator */}
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-emerald-50/50 border border-emerald-200 text-[11px]">
+                      <span className="text-slate-700 font-medium flex items-center gap-1">
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>ABHA Federated Record:</span>
+                      </span>
+                      {consentGranted ? (
+                        <span className="text-emerald-800 font-bold">Access Granted</span>
+                      ) : (
+                        <span className="text-amber-800 font-bold">Consent Pending</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowAbhaConsentModal(true)}
+                      className="px-2.5 py-1.5 rounded-xl text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 font-bold text-xs transition cursor-pointer"
+                    >
+                      ABHA Consent
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedHospitalId(hosp.id);
+                        multiHospitalConsentService.setActiveHospital(hosp.id);
+                        setBookingCategory('DOCTOR');
+                        setBookingConfirmedToast(`Selected ${hosp.name}. Choose your preferred slot and confirm above.`);
+                        window.scrollTo({ top: 300, behavior: 'smooth' });
+                      }}
+                      className="flex-1 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition cursor-pointer text-center"
+                    >
+                      Book OPD (₹{hosp.consultationFeeInr})
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* TAB 1: PATHOLOGY LABS */}
         {vicinityTab === 'LABS' && (
@@ -1101,6 +1280,13 @@ export const PatientOverviewDashboard: React.FC<PatientOverviewDashboardProps> =
           </div>
         </div>
       )}
+
+      {/* ABHA MULTI-HOSPITAL FEDERATED CONSENT MANAGER MODAL */}
+      <AbhaMultiHospitalConsentModal
+        patient={patient}
+        isOpen={showAbhaConsentModal}
+        onClose={() => setShowAbhaConsentModal(false)}
+      />
 
     </div>
   );
