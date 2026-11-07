@@ -245,7 +245,7 @@ export const OpdNavbar: React.FC<OpdNavbarProps> = ({
       </div>
 
       {/* Main Navigation Bar with Vyuhaa Logo */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         {/* Vyuhaa Logo on the Window */}
         <div className="flex items-center gap-3 shrink-0">
           <img 

@@ -30,6 +30,8 @@ import {
   FileCheck
 } from 'lucide-react';
 import { LabOrder, LabReferral, OpdClinic, LabPartner } from '../../types';
+import { Users as UsersIcon, Stethoscope as StethoscopeIcon, Store as StoreIcon } from 'lucide-react';
+import { PortalSidebarLayout } from '../layout/PortalSidebarLayout';
 import { opdStore, OPD_CLINICS } from '../../services/opdStore';
 import { PathologyReportUploadModal } from './PathologyReportUploadModal';
 import { DiagnosticAnalyserModal } from './DiagnosticAnalyserModal';
@@ -142,7 +144,7 @@ export const LabView: React.FC<LabViewProps> = ({ onOpenWhatsAppView }) => {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 mx-auto">
       {/* Toast Notification */}
       {publishSuccessToast && (
         <div className="fixed bottom-6 right-6 z-50 bg-teal-950 text-white px-5 py-3 rounded-2xl shadow-xl border border-teal-500 flex items-center gap-3 animate-bounce">
@@ -151,39 +153,38 @@ export const LabView: React.FC<LabViewProps> = ({ onOpenWhatsAppView }) => {
         </div>
       )}
 
-      {/* Diagnostic Lab Store Switcher Bar */}
-      <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-2">
-          <Compass className="w-4 h-4 text-purple-700" />
-          <span className="font-extrabold text-slate-800 uppercase tracking-wide text-[11px]">
-            Active Diagnostic Facility / Laboratory Store:
-          </span>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-1.5 font-bold">
-          {allLabPartners.map(lab => (
-            <button
-              key={lab.id}
-              onClick={() => {
-                setSelectedLabId(lab.id);
-                opdStore.setSelectedLab(lab.id);
-              }}
-              className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
-                lab.id === currentLab.id
-                  ? 'bg-purple-900 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              <Microscope className="w-3.5 h-3.5" />
-              <span>{lab.name.split(' ')[0]}</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-white/20">
-                {lab.distance.split(' ')[0]} {lab.distance.split(' ')[1]}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-
+      <PortalSidebarLayout
+        activeId={statusFilter}
+        onSelect={id => setStatusFilter(id as 'all' | 'pending' | 'completed')}
+        header={
+          <div className="space-y-0.5">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-rose-700">Pathology lab</div>
+            <div className="text-sm font-extrabold text-slate-900 truncate">{currentLab.name.split(/ & | — |\(/)[0].trim()}</div>
+            <div className="text-[11px] text-slate-500 truncate">{currentLab.distance}</div>
+          </div>
+        }
+        groups={[
+          { heading: 'Requisitions', items: [
+            { id: 'all', label: 'All Requisitions', icon: TestTubes, badge: labOrders.length },
+            { id: 'pending', label: 'Pending Reports', icon: Clock, badge: pendingCount, badgeTone: 'amber' },
+            { id: 'completed', label: 'Published', icon: CheckCircle2, badge: completedCount, badgeTone: 'emerald' },
+          ]},
+          { heading: 'Referring doctor', items: [
+            { id: 'clinic-all', label: 'All Doctors', icon: UsersIcon, badge: opdStore.getAllLabOrders().length, selected: selectedClinicFilter === 'all', onClick: () => setSelectedClinicFilter('all') },
+            ...OPD_CLINICS.map(clinic => ({
+              id: `clinic-${clinic.id}`, label: clinic.leadDoctor, icon: StethoscopeIcon,
+              badge: opdStore.getAllLabOrders(clinic.id).length,
+              selected: selectedClinicFilter === clinic.id, onClick: () => setSelectedClinicFilter(clinic.id),
+            })),
+          ]},
+          { heading: 'Lab store', items: allLabPartners.map(lab => ({
+            id: `lab-${lab.id}`, label: lab.name.split(/ & | — |\(/)[0].trim(), icon: Microscope,
+            selected: lab.id === currentLab.id,
+            onClick: () => { setSelectedLabId(lab.id); opdStore.setSelectedLab(lab.id); },
+          }))},
+        ]}
+      >
+        <div className="space-y-6">
       {/* Header Banner - Diagnostic Facility */}
       <div className="bg-slate-900 text-white rounded-2xl p-5 shadow-xs border border-slate-800">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -330,92 +331,21 @@ export const LabView: React.FC<LabViewProps> = ({ onOpenWhatsAppView }) => {
         </div>
       )}
 
-      {/* Filter by Referring Doctor Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-purple-700" />
-            <span className="text-xs font-extrabold text-slate-900 uppercase tracking-wide">
-              Filter by Referring Doctor & Hospital Facility:
-            </span>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold">
-            <button
-              onClick={() => setSelectedClinicFilter('all')}
-              className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
-                selectedClinicFilter === 'all'
-                  ? 'bg-purple-900 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              <span>All Referring Doctors</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-white/20">
-                {opdStore.getAllLabOrders().length}
-              </span>
-            </button>
-
-            {OPD_CLINICS.map(clinic => {
-              const count = opdStore.getAllLabOrders(clinic.id).length;
-              return (
-                <button
-                  key={clinic.id}
-                  onClick={() => setSelectedClinicFilter(clinic.id)}
-                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
-                    selectedClinicFilter === clinic.id
-                      ? 'bg-purple-900 text-white shadow-xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  <span>{clinic.leadDoctor} ({clinic.department.split(' ')[0]})</span>
-                  {count > 0 && (
-                    <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-purple-100 text-purple-900 font-bold">
-                      {count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+      {/* Search */}
+      <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs flex items-center justify-between gap-3 text-xs">
+        <div className="relative w-full sm:w-96">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder="Search test name, patient, doctor, OPD ID..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:bg-white focus:border-rose-400 focus:outline-none"
+          />
         </div>
-
-        {/* Search & Filter row */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-slate-100">
-          <div className="relative w-full sm:w-80">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Search test name, patient, doctor, OPD ID..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:bg-white focus:border-purple-500 focus:outline-none"
-            />
-          </div>
-
-          <div className="flex items-center gap-2 self-end sm:self-auto text-xs">
-            <span className="text-slate-500 font-semibold text-[11px]">Filter:</span>
-            <div className="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200 font-bold text-[11px]">
-              <button
-                onClick={() => setStatusFilter('all')}
-                className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${statusFilter === 'all' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600'}`}
-              >
-                All ({labOrders.length})
-              </button>
-              <button
-                onClick={() => setStatusFilter('pending')}
-                className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${statusFilter === 'pending' ? 'bg-white text-amber-900 shadow-2xs' : 'text-slate-600'}`}
-              >
-                Pending ({pendingCount})
-              </button>
-              <button
-                onClick={() => setStatusFilter('completed')}
-                className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${statusFilter === 'completed' ? 'bg-white text-emerald-900 shadow-2xs' : 'text-slate-600'}`}
-              >
-                Published ({completedCount})
-              </button>
-            </div>
-          </div>
-        </div>
+        <span className="hidden sm:inline text-[11px] font-bold text-slate-500 whitespace-nowrap">
+          Showing {filteredOrders.length} of {labOrders.length}
+        </span>
       </div>
 
       {/* Lab Requisitions Table */}
@@ -637,6 +567,9 @@ export const LabView: React.FC<LabViewProps> = ({ onOpenWhatsAppView }) => {
           </div>
         </div>
       )}
+
+        </div>
+      </PortalSidebarLayout>
 
       {/* MODAL 1: Enter Results & Publish Report */}
       {selectedOrderForUpload && (

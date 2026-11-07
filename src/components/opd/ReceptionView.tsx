@@ -25,6 +25,7 @@ import { opdStore, OPD_CLINICS } from '../../services/opdStore';
 import { PatientDatabaseView } from './PatientDatabaseView';
 import { ScanPrescriptionModal } from './ScanPrescriptionModal';
 import { CareGapNudgesPanel } from './CareGapNudgesPanel';
+import { PortalSidebarLayout } from '../layout/PortalSidebarLayout';
 import { getCareGapNudges, lastNudge } from '../../services/careGapNudges';
 
 interface ReceptionViewProps {
@@ -67,96 +68,52 @@ export const ReceptionView: React.FC<ReceptionViewProps> = ({
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto text-xs">
+    <div className="space-y-6 mx-auto text-xs">
+      <PortalSidebarLayout
+        activeId={receptionViewMode}
+        onSelect={id => setReceptionViewMode(id as 'QUEUE' | 'DATABASE' | 'CARE_GAPS')}
+        header={
+          <div className="space-y-0.5">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-rose-700">Front desk</div>
+            <div className="text-sm font-extrabold text-slate-900 truncate">{selectedClinic.receptionistName || 'Reception'}</div>
+            <div className="text-[11px] text-slate-500 truncate">{selectedClinic.shortName}</div>
+          </div>
+        }
+        groups={[
+          { heading: 'Front desk', items: [
+            { id: 'QUEUE', label: "Today's Queue", icon: Clock, badge: clinicPatients.filter(p => p.queueStatus === 'Waiting').length, badgeTone: 'amber' },
+            { id: 'CARE_GAPS', label: 'Care Gaps & Nudges', icon: Send, badge: pendingNudges, badgeTone: 'rose' },
+            { id: 'DATABASE', label: 'Patient Database', icon: Users },
+          ]},
+          { heading: 'Actions', items: [
+            { id: 'register', label: 'Register New Patient', icon: UserPlus, onClick: onOpenNewPatientModal },
+            { id: 'scan', label: 'Digitize Paper Slip', icon: Scan, onClick: () => handleOpenScanRx() },
+          ]},
+          { heading: 'OPD rooms', items: OPD_CLINICS.map(clinic => ({
+            id: `room-${clinic.id}`,
+            label: clinic.shortName.replace(/\s*\(.*\)\s*/, ''),
+            icon: Building2,
+            badge: opdStore.getPatientsForClinic(clinic.id).length,
+            selected: clinic.id === selectedClinic.id,
+            onClick: () => opdStore.setSelectedClinic(clinic.id),
+          }))},
+        ]}
+      >
+        <div className="space-y-6">
       {/* Reception Header */}
-      <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-3">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-rose-800 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200">
-                {selectedClinic.roomNumber}
-              </span>
-              <span className="text-xs text-slate-500 font-medium">
-                Lead: {selectedClinic.leadDoctor} • Reception: {selectedClinic.receptionistName}
-              </span>
-            </div>
-
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">
-              {selectedClinic.name}
-            </h1>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex flex-wrap items-center gap-2.5">
-            <button
-              onClick={() => setReceptionViewMode(receptionViewMode === 'DATABASE' ? 'QUEUE' : 'DATABASE')}
-              className={`inline-flex items-center gap-2 px-4 py-2.5 border font-extrabold text-xs rounded-2xl shadow-2xs transition cursor-pointer active:scale-95 ${
-                receptionViewMode === 'DATABASE'
-                  ? 'bg-rose-800 text-white border-rose-900'
-                  : 'bg-white hover:bg-rose-50 text-slate-800 border-rose-200'
-              }`}
-            >
-              <Users className="w-4 h-4 text-rose-600" />
-              <span>{receptionViewMode === 'DATABASE' ? "← Today's Queue" : 'All Visited Mothers Database'}</span>
-            </button>
-
-            <button
-              onClick={() => handleOpenScanRx()}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-rose-50 border border-rose-200 text-slate-800 font-extrabold text-xs rounded-2xl shadow-2xs transition cursor-pointer active:scale-95"
-              title="Digitize physical paper prescription brought from outside doctor"
-            >
-              <Scan className="w-4 h-4 text-rose-700" />
-              <span>Digitize External Paper Slip</span>
-            </button>
-
-            <button
-              onClick={onOpenNewPatientModal}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer active:scale-95"
-            >
-              <UserPlus className="w-4 h-4 text-slate-300" />
-              <span>+ Register New Patient</span>
-            </button>
-          </div>
+      <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-rose-800 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200">
+            {selectedClinic.roomNumber}
+          </span>
+          <span className="text-xs text-slate-500 font-medium">
+            Lead: {selectedClinic.leadDoctor} • Reception: {selectedClinic.receptionistName}
+          </span>
         </div>
-
-        {/* OPD Clinic Switcher */}
-        <div className="flex items-center gap-2 pt-2 border-t border-rose-200/60 text-xs">
-          <span className="text-rose-900 font-bold text-[11px]">OPD Room:</span>
-          <div className="flex flex-wrap items-center gap-1.5 font-bold">
-            {OPD_CLINICS.map(clinic => (
-              <button
-                key={clinic.id}
-                onClick={() => opdStore.setSelectedClinic(clinic.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5 ${
-                  clinic.id === selectedClinic.id
-                    ? 'bg-rose-700 text-white shadow-xs'
-                    : 'bg-white text-slate-600 hover:bg-rose-100/60 border border-rose-200'
-                }`}
-              >
-                <Building2 className="w-3.5 h-3.5" />
-                <span>{clinic.shortName}</span>
-                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-white/20">
-                  {opdStore.getPatientsForClinic(clinic.id).length}
-                </span>
-              </button>
-            ))}
-          </div>
-          <button
-              onClick={() => setReceptionViewMode(receptionViewMode === 'CARE_GAPS' ? 'QUEUE' : 'CARE_GAPS')}
-              className={`ml-auto inline-flex items-center gap-2 px-4 py-1.5 border font-extrabold text-xs rounded-2xl shadow-2xs transition cursor-pointer active:scale-95 ${
-                receptionViewMode === 'CARE_GAPS'
-                  ? 'bg-rose-800 text-white border-rose-900'
-                  : 'bg-white hover:bg-rose-50 text-slate-800 border-rose-200'
-              }`}
-              title="Patients to nudge for tests, medicines, follow-ups and vaccinations"
-            >
-              <Send className={`w-4 h-4 ${receptionViewMode === 'CARE_GAPS' ? 'text-rose-200' : 'text-rose-600'}`} />
-              <span>{receptionViewMode === 'CARE_GAPS' ? "← Today's Queue" : 'Care Gaps'}</span>
-              {receptionViewMode !== 'CARE_GAPS' && pendingNudges > 0 && (
-                <span className="text-[10px] bg-rose-600 text-white px-1.5 rounded-full font-bold">{pendingNudges}</span>
-              )}
-            </button>
-        </div>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">
+          {receptionViewMode === 'CARE_GAPS' ? 'Care Gaps & Nudges' : receptionViewMode === 'DATABASE' ? 'Visited Patients Database' : "Today's Queue"}
+          <span className="text-slate-400 font-semibold text-base"> · {selectedClinic.name}</span>
+        </h1>
       </div>
 
       {/* Main Reception Workspace: Database or Active Queue */}
@@ -326,6 +283,9 @@ export const ReceptionView: React.FC<ReceptionViewProps> = ({
           </div>
         </>
       )}
+
+        </div>
+      </PortalSidebarLayout>
 
       {/* External Paper Prescription Digitize Modal */}
       {isScanRxModalOpen && (
