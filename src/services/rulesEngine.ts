@@ -485,7 +485,7 @@ export interface SimulationResultItem {
 }
 
 /** Convert a rule trigger/grace to a window in days. Rules may be written in weeks or days. */
-function ruleWindowDays(rule: CareGapRule): { start: number; end: number; grace: number } {
+export function ruleWindowDays(rule: CareGapRule): { start: number; end: number; grace: number } {
   const t: any = rule.trigger;
   const o: any = rule.overdue_after || {};
   const start = t.start_weeks !== undefined ? t.start_weeks * 7 : (t.days ?? 0);

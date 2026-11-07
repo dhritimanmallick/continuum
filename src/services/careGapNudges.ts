@@ -7,6 +7,7 @@
  */
 import { OpdPatient } from '../types';
 import { opdStore } from './opdStore';
+import { runRuleSimulation, ruleWindowDays, INITIAL_RULES } from './rulesEngine';
 
 export type NudgeCategory = 'TESTING' | 'PHARMACY' | 'ADHERENCE';
 
@@ -19,6 +20,7 @@ export interface CareGapNudge {
   since?: string;            // when it was ordered / scheduled / due
   urgent: boolean;
   message: string;           // WhatsApp text in the patient's preferred language
+  ruleId?: string;           // set when the gap comes from the care-schedule rule table
 }
 
 type Lang = 'English' | 'Hindi' | 'Bengali';
@@ -56,6 +58,56 @@ const T: Record<string, Record<Lang, (name: string, item: string, extra: string)
   },
 };
 
+const SCHEDULE: Record<Lang, (name: string, item: string, when: string) => string> = {
+  English: (n, i, w) => `Hello ${n}, as per your care schedule your ${i} is due (${w}). Reply YES and we will book it for you.`,
+  Hindi: (n, i, w) => `नमस्ते ${n}, आपकी देखभाल अनुसूची के अनुसार आपका ${i} (${w}) होना है। बुक करने के लिए YES लिखें।`,
+  Bengali: (n, i, w) => `নমস্কার ${n}, আপনার যত্নের সময়সূচি অনুযায়ী আপনার ${i} (${w}) করানোর সময় হয়েছে। বুক করতে YES লিখুন।`,
+};
+
+// Evidence that a scheduled item is already ordered or done (then the order nudge or the record covers it)
+const EVIDENCE: Record<string, RegExp> = {
+  A2: /CBC|blood group|VDRL|HIV|HBsAg|antenatal profile/i,
+  A7: /glucose|OGTT|GTT/i, A8: /CBC|ha?emoglobin|\bHb\b/i, A9: /antibody|ICT|coombs/i,
+  F1: /scan|ultrasound|USG/i, F2: /scan|ultrasound|USG|nuchal|NT/i, F3: /anomaly|TIFFA|level.?II|ultrasound/i,
+  F4: /growth|doppler|biometry/i, F5: /growth|doppler|biometry/i, P4: /glucose|OGTT|GTT/i,
+};
+
+/** Items due from the clinic's care-schedule rules for this patient (pregnancy week / days after delivery). */
+function scheduleGaps(p: OpdPatient, L: Lang, nm: string): CareGapNudge[] {
+  let input: Parameters<typeof runRuleSimulation>[0] | null = null;
+  let now = 0;
+  const flags = [...(p.pregnancyDetails?.clinicalFlags || [])];
+  if (p.isPregnant && p.pregnancyDetails?.gestationalAgeWeeks) {
+    now = p.pregnancyDetails.gestationalAgeWeeks * 7;
+    input = { patientType: 'pregnancy', gestationalAgeWeeks: p.pregnancyDetails.gestationalAgeWeeks, flags };
+  } else if (p.postnatalDetails?.postpartumDay !== undefined) {
+    now = p.postnatalDetails.postpartumDay;
+    if (p.postnatalDetails.hadGdm) flags.push('GDM history');
+    input = { patientType: 'mother', postpartumDays: p.postnatalDetails.postpartumDay, flags };
+  }
+  if (!input) return [];
+  const orders = [...(p.labReferrals || []).map(r => r.testName), ...(p.labOrders || []).map(o => o.testName)].join(' | ');
+  return runRuleSimulation(input, INITIAL_RULES)
+    .filter(r => r.status === 'DUE' || r.status === 'OVERDUE')
+    .filter(r => {
+      // only recent overdue items: older windows are assumed handled before the patient joined
+      const rule = INITIAL_RULES.find(x => x.rule_id === r.ruleId)!;
+      const { end, grace } = ruleWindowDays(rule);
+      return r.status === 'DUE' || now - (end + grace) <= 28;
+    })
+    .filter(r => !(EVIDENCE[r.ruleId] && EVIDENCE[r.ruleId].test(orders)))
+    .map(r => {
+      const rule = INITIAL_RULES.find(x => x.rule_id === r.ruleId)!;
+      const test = /test|scan|screening/.test(rule.required_action);
+      return {
+        key: `rule-${p.id}-${r.ruleId}`, patient: p, category: test ? 'TESTING' as const : 'ADHERENCE' as const,
+        title: rule.name, ruleId: r.ruleId,
+        reason: r.plainReason, since: r.expectedWindow, urgent: r.status === 'OVERDUE',
+        message: SCHEDULE[L](nm, rule.name.replace(/\s*\(.*\)\s*/, ' ').trim(), r.expectedWindow),
+      };
+    });
+}
+
 const firstName = (p: OpdPatient) => p.name.split(' ')[0];
 const lang = (p: OpdPatient): Lang => (p.preferredLanguage === 'Hindi' || p.preferredLanguage === 'Bengali' ? p.preferredLanguage : 'English');
 
@@ -64,6 +116,9 @@ export function getCareGapNudges(patients: OpdPatient[]): CareGapNudge[] {
   for (const p of patients) {
     const L = lang(p);
     const nm = p.isNewborn ? p.name : firstName(p);
+
+    // SCHEDULE: what the care-schedule rules say is due now (not yet ordered or done)
+    out.push(...scheduleGaps(p, L, nm));
 
     // TESTING: ordered tests the patient has not given a sample for; reports ready to review
     for (const r of p.labReferrals || []) {

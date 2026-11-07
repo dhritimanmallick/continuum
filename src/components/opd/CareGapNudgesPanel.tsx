@@ -23,6 +23,7 @@ export const CareGapNudgesPanel: React.FC<CareGapNudgesPanelProps> = ({
   const [filter, setFilter] = useState<'ALL' | NudgeCategory>('ALL');
   const [hideNudged, setHideNudged] = useState(false);
   const [query, setQuery] = useState('');
+  const [source, setSource] = useState<'ALL' | 'SCHEDULE' | 'ORDERS'>('ALL');
 
   const all = getCareGapNudges(patients);
   const count = (c: NudgeCategory) => all.filter(n => n.category === c).length;
@@ -31,6 +32,8 @@ export const CareGapNudgesPanel: React.FC<CareGapNudgesPanelProps> = ({
   const rows = all.filter(n => {
     if (filter !== 'ALL' && n.category !== filter) return false;
     if (hideNudged && lastNudge(n)) return false;
+    if (source === 'SCHEDULE' && !n.ruleId) return false;
+    if (source === 'ORDERS' && n.ruleId) return false;
     if (query.trim()) {
       const q = query.toLowerCase();
       return n.patient.name.toLowerCase().includes(q) || n.patient.mobile.includes(q) || n.title.toLowerCase().includes(q);
@@ -87,6 +90,16 @@ export const CareGapNudgesPanel: React.FC<CareGapNudgesPanelProps> = ({
             ))}
           </div>
           <div className="flex items-center gap-2">
+            <select
+              value={source}
+              onChange={e => setSource(e.target.value as typeof source)}
+              title="Where the gap comes from"
+              className="py-2 px-2.5 bg-white border border-rose-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-rose-400"
+            >
+              <option value="ALL">All sources</option>
+              <option value="SCHEDULE">Due by care schedule ({all.filter(n => n.ruleId).length})</option>
+              <option value="ORDERS">Orders &amp; visits ({all.filter(n => !n.ruleId).length})</option>
+            </select>
             <div className="relative w-full sm:w-64">
               <Search className="w-4 h-4 text-rose-300 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
@@ -109,7 +122,7 @@ export const CareGapNudgesPanel: React.FC<CareGapNudgesPanelProps> = ({
         </div>
 
         <div className="px-4 py-2 bg-rose-50/40 text-[11px] text-rose-900 font-semibold border-b border-rose-100">
-          {scopeLabel}: patients with an ordered test, prescription or scheduled visit that has not happened yet. Messages go in the patient's preferred language.
+          {scopeLabel}: patients with an ordered test, prescription or scheduled visit that has not happened yet, plus tests, scans and visits the care-schedule rules say are due for her pregnancy week or days after delivery. Messages go in the patient's preferred language.
         </div>
 
         {/* Table */}
@@ -141,6 +154,11 @@ export const CareGapNudgesPanel: React.FC<CareGapNudgesPanelProps> = ({
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border inline-flex items-center gap-1 ${meta.chip}`}>
                         <Icon className="w-3 h-3" />{meta.label}
                       </span>
+                      {n.ruleId && (
+                        <span className="ml-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border bg-sky-50 text-sky-800 border-sky-200 inline-flex items-center gap-1" title="Comes from the clinic's care-schedule rules for this patient's pregnancy week or days after delivery">
+                          <CalendarClock className="w-3 h-3" />Schedule · {n.ruleId}
+                        </span>
+                      )}
                       <span className="font-bold text-slate-800 block mt-1">{n.title}</span>
                       {n.urgent && (
                         <span className="text-[10px] text-rose-700 font-bold inline-flex items-center gap-1 mt-0.5">
