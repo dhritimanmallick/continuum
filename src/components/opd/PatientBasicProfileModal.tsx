@@ -18,7 +18,11 @@ import {
 import { OpdPatient, LabOrder } from '../../types';
 import { DiagnosticAnalyserModal } from './DiagnosticAnalyserModal';
 import { MyCareJourneyPanel } from './MyCareJourneyPanel';
-import { Award, FileText } from 'lucide-react';
+import { NewbornVaccinationCard } from './NewbornVaccinationCard';
+import { MaternalTestingPanel } from './MaternalTestingPanel';
+import { FamilyMemberManagementPanel } from '../patient/FamilyMemberManagementPanel';
+import { Award, FileText, Baby, TestTubes, Users } from 'lucide-react';
+
 
 interface PatientBasicProfileModalProps {
   patient: OpdPatient;
@@ -49,7 +53,10 @@ export const PatientBasicProfileModal: React.FC<PatientBasicProfileModalProps> =
   onClose,
   onOpenWhatsApp
 }) => {
-  const [activeTab, setActiveTab] = useState<'CARE_JOURNEY' | 'CLINICAL_PROFILE'>('CARE_JOURNEY');
+  const isNewborn = !!(patient.isNewborn || patient.vaccinationSchedule || patient.age <= 2);
+  const isMaternal = !!(patient.isPregnant || patient.maternalStage || patient.visitType === 'ANC' || patient.visitType === 'PNC' || patient.postnatalDetails);
+
+  const [activeTab, setActiveTab] = useState<'CARE_JOURNEY' | 'CLINICAL_PROFILE' | 'IMMUNIZATION' | 'MATERNAL_PROTOCOL' | 'FAMILY'>('CARE_JOURNEY');
   const [selectedOrderForAnalyser, setSelectedOrderForAnalyser] = useState<LabOrder | null>(null);
   const clinicalStage = getGestationalStage(patient.pregnancyDetails?.gestationalAgeWeeks);
 
@@ -85,11 +92,11 @@ export const PatientBasicProfileModal: React.FC<PatientBasicProfileModalProps> =
           </button>
         </div>
 
-        {/* Tab Switcher: MY CARE JOURNEY vs Clinical Profile */}
-        <div className="bg-white px-5 pt-3 border-b border-slate-200 flex items-center gap-3">
+        {/* Tab Switcher: MY CARE JOURNEY vs Clinical Profile vs Immunization / Maternal Tests */}
+        <div className="bg-white px-5 pt-3 border-b border-slate-200 flex items-center gap-3 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveTab('CARE_JOURNEY')}
-            className={`pb-2.5 font-extrabold text-xs transition border-b-2 flex items-center gap-1.5 cursor-pointer ${
+            className={`pb-2.5 font-extrabold text-xs transition border-b-2 flex items-center gap-1.5 cursor-pointer shrink-0 ${
               activeTab === 'CARE_JOURNEY'
                 ? 'border-teal-700 text-teal-900'
                 : 'border-transparent text-slate-500 hover:text-slate-900'
@@ -104,16 +111,56 @@ export const PatientBasicProfileModal: React.FC<PatientBasicProfileModalProps> =
             )}
           </button>
 
+          {isNewborn && (
+            <button
+              onClick={() => setActiveTab('IMMUNIZATION')}
+              className={`pb-2.5 font-extrabold text-xs transition border-b-2 flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                activeTab === 'IMMUNIZATION'
+                  ? 'border-sky-600 text-sky-900'
+                  : 'border-transparent text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <Baby className="w-4 h-4 text-sky-600" />
+              <span>MCP Immunization Card</span>
+            </button>
+          )}
+
+          {isMaternal && (
+            <button
+              onClick={() => setActiveTab('MATERNAL_PROTOCOL')}
+              className={`pb-2.5 font-extrabold text-xs transition border-b-2 flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                activeTab === 'MATERNAL_PROTOCOL'
+                  ? 'border-purple-600 text-purple-900'
+                  : 'border-transparent text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <TestTubes className="w-4 h-4 text-purple-600" />
+              <span>Maternal Tests Protocol</span>
+            </button>
+          )}
+
           <button
             onClick={() => setActiveTab('CLINICAL_PROFILE')}
-            className={`pb-2.5 font-extrabold text-xs transition border-b-2 flex items-center gap-1.5 cursor-pointer ${
+            className={`pb-2.5 font-extrabold text-xs transition border-b-2 flex items-center gap-1.5 cursor-pointer shrink-0 ${
               activeTab === 'CLINICAL_PROFILE'
                 ? 'border-teal-700 text-teal-900'
                 : 'border-transparent text-slate-500 hover:text-slate-900'
             }`}
           >
             <FileText className="w-4 h-4 text-slate-500" />
-            <span>Clinical Records & Gist</span>
+            <span>Clinical Records &amp; Gist</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('FAMILY')}
+            className={`pb-2.5 font-extrabold text-xs transition border-b-2 flex items-center gap-1.5 cursor-pointer shrink-0 ${
+              activeTab === 'FAMILY'
+                ? 'border-rose-700 text-rose-900'
+                : 'border-transparent text-slate-500 hover:text-slate-900'
+            }`}
+          >
+            <Users className="w-4 h-4 text-rose-600" />
+            <span>Family &amp; Dependants</span>
           </button>
         </div>
 
@@ -121,7 +168,14 @@ export const PatientBasicProfileModal: React.FC<PatientBasicProfileModalProps> =
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           {activeTab === 'CARE_JOURNEY' ? (
             <MyCareJourneyPanel patient={patient} />
+          ) : activeTab === 'IMMUNIZATION' ? (
+            <NewbornVaccinationCard patient={patient} />
+          ) : activeTab === 'MATERNAL_PROTOCOL' ? (
+            <MaternalTestingPanel patient={patient} />
+          ) : activeTab === 'FAMILY' ? (
+            <FamilyMemberManagementPanel patient={patient} />
           ) : (
+
             <>
               {/* Status banner */}
               <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">

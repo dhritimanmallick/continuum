@@ -29,11 +29,21 @@ import {
   CareMilestone,
   PatientAchievement,
   DoctorAchievement,
-  PathologistAchievement
+  PathologistAchievement,
+  VaccineScheduleItem,
+  MaternalClinicalStage,
+  MaternalTestProtocol
 } from '../types';
 import { integrationBackbone } from './integrationBackbone';
 import { authService } from './authService';
 import { gamificationEngine } from './gamificationEngine';
+import { 
+  generateNewbornVaccineSchedule, 
+  detectMaternalStage, 
+  MATERNAL_ANC_TESTS, 
+  MATERNAL_PNC_TESTS,
+  ALL_MATERNAL_TESTS 
+} from './clinicalProtocols';
 
 export const DOCTOR_PROFILES: DoctorProfile[] = [
   {
@@ -1266,6 +1276,331 @@ export const INITIAL_PATIENTS: OpdPatient[] = [
         title: 'Pediatric OPD token generated',
         actor: 'Receptionist Meghana'
       }
+    ],
+    vaccinationSchedule: generateNewbornVaccineSchedule('PAT-301', '2025-08-10', 60)
+  },
+
+  // 6b. Baby Reyansh (Newborn — 3 Weeks Old — Room 2 Pediatrics)
+  {
+    id: 'PAT-302',
+    opdId: 'OPD-2026-302',
+    clinicId: 'opd-ped',
+    clinicName: 'Pediatric & Child Health OPD (Room 2)',
+    tokenNumber: 2,
+    name: 'Baby Reyansh (Newborn of Sunita Das)',
+    age: 0,
+    dob: '2026-09-20',
+    gender: 'male',
+    mobile: '+91 98452 33411',
+    abhaId: '91-8842-1049-2311-C1',
+    address: 'Unkal, Hubballi, Karnataka',
+    isPregnant: false,
+    isNewborn: true,
+    birthDetails: {
+      dateOfBirth: '2026-09-20',
+      birthTime: '04:15 AM',
+      birthWeightKg: 3.15,
+      gestationWeeksAtBirth: 39,
+      deliveryType: 'Normal Vaginal',
+      apgarScore1Min: 8,
+      apgarScore5Min: 9,
+      motherPatientId: 'PAT-104',
+      motherName: 'Sunita Das',
+      bloodGroup: 'O Positive',
+      mcpCardNumber: 'MCP-2026-8812'
+    },
+    clinicalGist: {
+      headline: 'Baby Reyansh — 3 weeks old · Male · Newborn Health & Immunization Check',
+      summaryText: 'Healthy term neonate (birth weight 3.15kg). Birth dose vaccines (BCG, OPV-0, Hep-B) given. Due for 6-week primary immunization (Pentavalent-1, OPV-1, Rotavirus-1, PCV-1, fIPV-1). Exclusive breastfeeding established.',
+      importantRecords: {
+        bloodGroup: 'O Positive',
+        hb: '17.4 g/dL (Normal neonatal)',
+        previousChildren: 'N/A',
+        lastScan: 'Neonatal cranial USG Normal',
+        lastOpd: 'First OPD Visit',
+        currentGestation: '3 weeks postnatal',
+        glucose: 'Normal (82 mg/dL)'
+      },
+      relevantRecords: {
+        bloodGroup: 'O Positive',
+        hb: '17.4 g/dL',
+        previousChildren: 'N/A',
+        lastScan: 'Normal',
+        lastOpd: 'First OPD Visit',
+        currentGestation: '3 weeks postnatal',
+        glucose: '82 mg/dL'
+      },
+      isAiGenerated: true
+    },
+    visitReason: 'Newborn 3-week wellness evaluation & 6-week immunization booking',
+    visitType: 'Newborn',
+    queueStatus: 'Waiting',
+    waitingSince: '09:40 AM',
+    assignedDoctor: 'Dr. Sneha Patil',
+    vitals: {
+      bp: 'Normal neonatal',
+      weightKg: 3.45,
+      pulse: 136
+    },
+    doctorNotes: 'Vigorous baby, pink, good suckling reflex. Umbilical cord stump dry and healed. BCG scar developing on left arm. Hep-B 0 and OPV-0 documented in MCP card. Counseled mother on exclusive breastfeeding and scheduled 6-week pentavalent dose.',
+    prescriptions: ['Drops Vitamin D3 400 IU (0.5ml once daily)', 'Oral rehydration & warmth counseling'],
+    pharmacyOrders: [],
+    labReferrals: [],
+    labOrders: [],
+    whatsappMessages: [
+      {
+        id: 'WA-302',
+        direction: 'outgoing',
+        type: 'token_generated',
+        text: 'নমস্কার Sunita Das, আপনার নবজাতক Baby Reyansh-এর পেডিয়াট্রিক ওপিডি রেজিস্ট্রেশন সম্পন্ন হয়েছে। টোকেন #2 (ডঃ স্নেহা পাটিল, রুম 2)।',
+        timestamp: '09:40 AM',
+        delivered: true
+      }
+    ],
+    timeline: [
+      {
+        id: 'TL-302-1',
+        date: '20 Sep 2026',
+        time: '04:30 AM',
+        title: 'Birth Dose Vaccines Administered',
+        actor: 'Staff Nurse Radhika (Labour Room)',
+        details: 'BCG (0.05ml ID left arm), OPV-0 (2 drops oral), Hepatitis B-0 (0.5ml IM left thigh) successfully administered within 2 hours of delivery.'
+      },
+      {
+        id: 'TL-302-2',
+        date: '10 Oct 2026',
+        time: '09:40 AM',
+        title: 'OPD registration token generated',
+        actor: 'Receptionist Meghana'
+      }
+    ],
+    vaccinationSchedule: generateNewbornVaccineSchedule('PAT-302', '2026-09-20', 3)
+  },
+
+  // 6c. Pooja Deshmukh (Postnatal Mother — PNC 6-Week Checkup — Room 4 Maternal OPD)
+  {
+    id: 'PAT-105',
+    opdId: 'OPD-2026-105',
+    clinicId: 'opd-anc',
+    clinicName: 'Maternal & Antenatal OPD (Room 4)',
+    tokenNumber: 5,
+    name: 'Pooja Deshmukh',
+    age: 26,
+    gender: 'female',
+    mobile: '+91 97412 88201',
+    abhaId: '91-3312-7740-9912',
+    address: 'Gokul Road, Hubballi, Karnataka',
+    isPregnant: false,
+    maternalStage: 'POSTNATAL_6WEEKS',
+    visitType: 'PNC',
+    postnatalDetails: {
+      deliveryDate: '2026-08-30',
+      deliveryHospital: 'District Hospital Hubballi',
+      deliveryType: 'Cesarean (LSCS)',
+      babyGender: 'Female',
+      babyName: 'Baby Anvi',
+      hadGdm: true,
+      hadPreeclampsia: false,
+      postpartumDay: 42,
+      epdsScore: 4,
+      antiDAdministered: false
+    },
+    clinicalGist: {
+      headline: 'Pooja Deshmukh — 26 years · PNC Day 42 (6-Week Checkup) · History of GDM',
+      summaryText: 'Postnatal mother delivered by LSCS 6 weeks ago. History of Gestational Diabetes Mellitus managed on diet. Requires 6-week postnatal 75g OGTT to evaluate for persistent glucose intolerance, postpartum Hb, and thyroid check.',
+      importantRecords: {
+        bloodGroup: 'B Positive',
+        hb: '10.8 g/dL',
+        previousChildren: 1,
+        lastScan: 'Postnatal USG Pelvis Normal',
+        lastOpd: '30 Aug 2026 (Delivery)',
+        currentGestation: 'PNC 6 Weeks',
+        glucose: '138 mg/dL (Antepartum GDM)'
+      },
+      relevantRecords: {
+        bloodGroup: 'B Positive',
+        hb: '10.8 g/dL',
+        previousChildren: 1,
+        lastScan: 'Normal',
+        lastOpd: '30 Aug 2026',
+        currentGestation: 'PNC 6 Weeks',
+        glucose: 'Pending 6-week OGTT'
+      },
+      isAiGenerated: true
+    },
+    visitReason: 'PNC 6-Week Follow-up, Post-GDM 75g OGTT & Anemia evaluation',
+    queueStatus: 'Waiting',
+    waitingSince: '09:45 AM',
+    assignedDoctor: 'Dr. Anita Rao',
+    hasAbhaConsent: true,
+    preferredLanguage: 'Hindi',
+    consultationFee: 0,
+    billingScheme: 'JSSK / NHM (Free Antenatal)',
+    visitDate: '10 Oct 2026',
+    vitals: {
+      bp: '116/74 mmHg',
+      weightKg: 62.0,
+      pulse: 76
+    },
+    doctorNotes: 'PNC 6-week evaluation. Abdominal LSCS scar healthy and healed. No uterine tenderness or lochia. Ordered 75g 2-hour OGTT to reclassify diabetes status following GDM. Prescribed continuing IFA & Calcium.',
+    prescriptions: ['Tab. Calcium 500mg + Vit D3 bd', 'Tab. Iron & Folic Acid od for 3 months'],
+    pharmacyOrders: [],
+    labReferrals: [
+      {
+        id: 'REF-105-1',
+        opdId: 'OPD-2026-105',
+        clinicId: 'opd-anc',
+        clinicName: 'Maternal & Antenatal OPD (Room 4)',
+        patientId: 'PAT-105',
+        patientName: 'Pooja Deshmukh',
+        patientAge: 26,
+        testName: 'Postnatal 75g 2-hour Oral Glucose Tolerance Test (OGTT)',
+        priority: 'Routine',
+        requestedBy: 'Dr. Anita Rao',
+        requestedAt: '09:50 AM',
+        status: 'REQUESTED',
+        relevantClinicalHistory: 'PNC Day 42, reclassify GDM to rule out persistent Type 2 Diabetes'
+      }
+    ],
+    labOrders: [],
+    whatsappMessages: [
+      {
+        id: 'WA-105',
+        direction: 'outgoing',
+        type: 'token_generated',
+        text: 'नमस्ते Pooja Deshmukh जी, आपका प्रसवोत्तर (PNC) ओपीडी पंजीकरण सफल हुआ। टोकन #5 (डॉ. अनिता राव, कमरा 4)।',
+        timestamp: '09:45 AM',
+        delivered: true
+      }
+    ],
+    timeline: [
+      {
+        id: 'TL-105-1',
+        date: '10 Oct 2026',
+        time: '09:45 AM',
+        title: 'Postnatal OPD token generated',
+        actor: 'Receptionist Pooja'
+      }
+    ]
+  },
+
+  // 6d. Kavita Patil (Antenatal Mother — 1st Trimester 10 Weeks — Room 4 Maternal OPD)
+  {
+    id: 'PAT-106',
+    opdId: 'OPD-2026-106',
+    clinicId: 'opd-anc',
+    clinicName: 'Maternal & Antenatal OPD (Room 4)',
+    tokenNumber: 6,
+    name: 'Kavita Patil',
+    age: 24,
+    gender: 'female',
+    mobile: '+91 94481 99201',
+    abhaId: '91-4421-8890-1123',
+    address: 'Keshwapur, Hubballi, Karnataka',
+    isPregnant: true,
+    maternalStage: 'PREGNANCY_1ST_TRIMESTER',
+    visitType: 'ANC',
+    pregnancyDetails: {
+      gestationalAgeWeeks: 10,
+      gravida: 1,
+      para: 0,
+      edd: '10 May 2027',
+      lmp: '2026-08-03',
+      previousChildren: 0,
+      currentPregnancyType: 'Singleton',
+      clinicalFlags: ['Primigravida', 'Early pregnancy booking']
+    },
+    clinicalGist: {
+      headline: 'Kavita Patil — 24 years · Primigravida (G1P0) · 10 weeks gestation',
+      summaryText: 'First trimester antenatal booking visit. Requires baseline investigations: Blood Grouping & Rh, CBC, TSH, Fasting Blood Sugar, Infectious disease screen (HIV, HBsAg, VDRL), Urine Routine, and Obstetric Dating Scan.',
+      importantRecords: {
+        bloodGroup: 'Pending booking',
+        hb: '11.8 g/dL',
+        previousChildren: 0,
+        lastScan: 'Dating scan booked',
+        lastOpd: 'First ANC visit',
+        currentGestation: '10 weeks',
+        glucose: 'Pending FBS'
+      },
+      relevantRecords: {
+        bloodGroup: 'Pending',
+        hb: '11.8 g/dL',
+        previousChildren: 0,
+        lastScan: 'Dating scan booked',
+        lastOpd: 'First ANC visit',
+        currentGestation: '10 weeks',
+        glucose: 'Pending'
+      },
+      isAiGenerated: true
+    },
+    visitReason: '1st Trimester Antenatal Booking, Dating Scan & Early Screening Tests',
+    queueStatus: 'Waiting',
+    waitingSince: '09:50 AM',
+    assignedDoctor: 'Dr. Anita Rao',
+    hasAbhaConsent: true,
+    preferredLanguage: 'English',
+    consultationFee: 0,
+    billingScheme: 'JSSK / NHM (Free Antenatal)',
+    visitDate: '10 Oct 2026',
+    vitals: {
+      bp: '112/70 mmHg',
+      weightKg: 52.0,
+      pulse: 74
+    },
+    doctorNotes: 'G1P0 at 10 weeks. Mild morning nausea. Initiated Tab. Folic Acid 5mg od. Ordered mandatory 1st trimester antenatal testing panel: ABO/Rh, CBC, TSH, FBS, HIV/HBsAg/VDRL, Urine R/M and scheduled Dating Ultrasound with NT scan window.',
+    prescriptions: ['Tab. Folic Acid 5mg od for 1st trimester', 'Tab. Doxylamine + Pyridoxine hs for morning sickness'],
+    pharmacyOrders: [],
+    labReferrals: [
+      {
+        id: 'REF-106-1',
+        opdId: 'OPD-2026-106',
+        clinicId: 'opd-anc',
+        clinicName: 'Maternal & Antenatal OPD (Room 4)',
+        patientId: 'PAT-106',
+        patientName: 'Kavita Patil',
+        patientAge: 24,
+        testName: 'Blood Grouping & Rh Typing (ABO/RhD)',
+        priority: 'Routine',
+        requestedBy: 'Dr. Anita Rao',
+        requestedAt: '09:55 AM',
+        status: 'REQUESTED',
+        relevantClinicalHistory: 'Primigravida 1st trimester baseline'
+      },
+      {
+        id: 'REF-106-2',
+        opdId: 'OPD-2026-106',
+        clinicId: 'opd-anc',
+        clinicName: 'Maternal & Antenatal OPD (Room 4)',
+        patientId: 'PAT-106',
+        patientName: 'Kavita Patil',
+        patientAge: 24,
+        testName: 'Serum TSH (Thyroid Stimulating Hormone)',
+        priority: 'Routine',
+        requestedBy: 'Dr. Anita Rao',
+        requestedAt: '09:55 AM',
+        status: 'REQUESTED',
+        relevantClinicalHistory: 'Early pregnancy hypothyroidism screening'
+      }
+    ],
+    labOrders: [],
+    whatsappMessages: [
+      {
+        id: 'WA-106',
+        direction: 'outgoing',
+        type: 'token_generated',
+        text: 'Dear Kavita Patil, your 1st Trimester Antenatal registration is complete. Token #6 (Dr. Anita Rao, Room 4). Welcome to District Hospital Maternal OPD.',
+        timestamp: '09:50 AM',
+        delivered: true
+      }
+    ],
+    timeline: [
+      {
+        id: 'TL-106-1',
+        date: '10 Oct 2026',
+        time: '09:50 AM',
+        title: '1st Trimester ANC Token Generated',
+        actor: 'Receptionist Pooja'
+      }
     ]
   },
 
@@ -2012,6 +2347,8 @@ class OpdStore {
       this.currentPortal = 'PHARMA';
     } else if (role === 'ADMIN') {
       this.currentPortal = 'ADMIN';
+    } else if (role === 'PATIENT') {
+      // Patient has dedicated individual portal
     } else {
       this.currentPortal = 'OPD';
       this.currentOpdRole = role;
@@ -2675,6 +3012,29 @@ class OpdStore {
       para: number;
       clinicalFlags?: string[];
     };
+    isNewborn?: boolean;
+    birthDetails?: {
+      birthWeightKg?: number;
+      deliveryType?: 'Normal Vaginal' | 'Caesarean (LSCS)' | 'Assisted Vacuum/Forceps';
+      birthTime?: string;
+      placeOfBirth?: string;
+      gestationalAgeAtBirthWeeks?: number;
+      apgarScore1Min?: number;
+      apgarScore5Min?: number;
+      maternalBloodGroup?: string;
+    };
+    maternalStage?: MaternalClinicalStage;
+    postnatalDetails?: {
+      deliveryDate?: string;
+      deliveryType?: 'Normal Vaginal' | 'Caesarean (LSCS)' | 'Assisted Vacuum/Forceps';
+      babyGender?: 'male' | 'female';
+      complications?: string[];
+      infantFeeding?: 'Exclusive Breastfeeding' | 'Formula' | 'Mixed';
+      maternalBloodGroup?: string;
+      neonatalBloodGroup?: string;
+      antiDAdministered?: boolean;
+      epdsScore?: number;
+    };
   }): OpdPatient {
     const tokenNumber = this.patients.length + 1;
     const opdId = `OPD-2026-${String(100 + tokenNumber)}`;
@@ -2684,21 +3044,29 @@ class OpdStore {
     const lang = params.preferredLanguage || 'Hindi';
     const finalAddress = params.address || 'Vidyanagar, Hubballi';
 
-    const headline = params.isPregnant && params.pregnancy
+    const headline = params.isNewborn
+      ? `${params.name} — ${params.age > 0 ? `${params.age}y` : 'Newborn/Infant'} · ${params.gender.toUpperCase()} · MCP Immunization Registered`
+      : params.isPregnant && params.pregnancy
       ? `${params.name} — ${params.age} years · G${params.pregnancy.gravida}P${params.pregnancy.para} · ${params.pregnancy.gestationalAgeWeeks} weeks pregnant`
+      : params.postnatalDetails
+      ? `${params.name} — ${params.age} years · Postnatal (Delivered ${params.postnatalDetails.deliveryDate || 'Recently'})`
       : `${params.name} — ${params.age} years · ${params.gender.toUpperCase()} · OPD Visit`;
 
-    const summaryText = params.isPregnant && params.pregnancy
+    const summaryText = params.isNewborn
+      ? `Infant/Newborn registered for routine pediatric checkup and immunization. Birth weight: ${params.birthDetails?.birthWeightKg || 3.1} kg. Reason for visit: ${params.visitReason}.`
+      : params.isPregnant && params.pregnancy
       ? `Previous ${params.pregnancy.previousChildren} child. Current pregnancy at ${params.pregnancy.gestationalAgeWeeks} weeks. Reason for visit: ${params.visitReason}.`
+      : params.postnatalDetails
+      ? `Postnatal mother visiting for postpartum recovery and maternal evaluation. Reason for visit: ${params.visitReason}.`
       : `Patient registered for ${params.visitReason}. Baseline health records initiated.`;
 
     const gistRecords = {
-      bloodGroup: 'Pending check',
+      bloodGroup: params.isNewborn ? (params.birthDetails?.maternalBloodGroup ? `Maternal: ${params.birthDetails.maternalBloodGroup}` : 'Pending check') : 'Pending check',
       hb: 'Pending CBC',
       previousChildren: params.pregnancy?.previousChildren || 0,
       lastScan: 'None on record',
       lastOpd: 'Today (New Enrolment)',
-      currentGestation: params.pregnancy ? `${params.pregnancy.gestationalAgeWeeks} weeks` : 'N/A',
+      currentGestation: params.pregnancy ? `${params.pregnancy.gestationalAgeWeeks} weeks` : (params.isNewborn ? 'Newborn' : 'N/A'),
       glucose: 'Pending screen'
     };
 
@@ -2709,9 +3077,9 @@ class OpdStore {
 
     const consultationFee = params.consultationFee !== undefined 
       ? params.consultationFee 
-      : (params.isPregnant ? 0 : 300);
+      : (params.isPregnant || params.isNewborn ? 0 : 300);
 
-    const billingScheme = params.billingScheme || (params.isPregnant ? 'JSSK / NHM (Free Antenatal)' : 'General OPD (Paid - ₹300)');
+    const billingScheme = params.billingScheme || (params.isPregnant || params.isNewborn ? 'JSSK / NHM (Free Antenatal/Neonatal)' : 'General OPD (Paid - ₹300)');
 
     const welcomeText = getLocalizedTokenMessage(
       params.name,
@@ -2727,7 +3095,7 @@ class OpdStore {
       tokenNumber,
       name: params.name,
       age: params.age,
-      dob: params.dob || '1998-01-01',
+      dob: params.dob || (params.isNewborn ? '2026-09-19' : '1998-01-01'),
       gender: params.gender,
       mobile: params.mobile,
       abhaId,
@@ -2739,6 +3107,17 @@ class OpdStore {
       visitDate: todayDate,
       followUpStatus: 'Scheduled',
       isPregnant: params.isPregnant,
+      isNewborn: params.isNewborn,
+      birthDetails: params.birthDetails ? {
+        dateOfBirth: params.dob || '2026-09-19',
+        ...params.birthDetails
+      } : undefined,
+      maternalStage: params.maternalStage || (params.isPregnant ? detectMaternalStage({ isPregnant: true, pregnancyDetails: params.pregnancy }) : (params.postnatalDetails ? 'POSTNATAL_6WEEKS' : undefined)),
+      postnatalDetails: params.postnatalDetails ? {
+        deliveryDate: params.postnatalDetails.deliveryDate || '2026-08-28',
+        ...params.postnatalDetails
+      } : undefined,
+      vaccinationSchedule: params.isNewborn ? generateNewbornVaccineSchedule(params.dob || '2026-09-19') : undefined,
       pregnancyDetails: params.pregnancy ? {
         gravida: params.pregnancy.gravida,
         para: params.pregnancy.para,
@@ -2759,7 +3138,7 @@ class OpdStore {
         isAiGenerated: true
       },
       visitReason: params.visitReason,
-      visitType: params.visitType || (params.isPregnant ? 'ANC' : 'Gynaecology'),
+      visitType: params.visitType || (params.isNewborn ? 'Immunisation' : (params.isPregnant ? 'ANC' : (params.postnatalDetails ? 'PNC' : 'Gynaecology'))),
       queueStatus: 'Waiting',
       waitingSince: nowTime,
       assignedDoctor: selectedClinic.leadDoctor,
@@ -2788,12 +3167,129 @@ class OpdStore {
     };
 
     this.patients.unshift(newPatient);
+    this.refreshPatientJourney(newPatient.id);
     this.notify();
     return newPatient;
   }
 
   startOpdVisit(params: Parameters<OpdStore['createOpdVisit']>[0]): OpdPatient {
     return this.createOpdVisit(params);
+  }
+
+  /**
+   * Administer a vaccine dose for newborn/infant
+   */
+  recordVaccineAdministration(params: {
+    patientId: string;
+    vaccineCode: string;
+    batchNumber?: string;
+    site?: string;
+    administeredBy?: string;
+    notes?: string;
+  }): boolean {
+    const patient = this.patients.find(p => p.id === params.patientId);
+    if (!patient) return false;
+
+    if (!patient.vaccinationSchedule || patient.vaccinationSchedule.length === 0) {
+      patient.vaccinationSchedule = generateNewbornVaccineSchedule(patient.dob || '2026-09-19');
+    }
+
+    const vaccine = patient.vaccinationSchedule.find(v => v.vaccineCode === params.vaccineCode);
+    if (!vaccine) return false;
+
+    const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const todayDate = '10 Oct 2026';
+    const administeredBy = params.administeredBy || patient.assignedDoctor || 'Dr. Sneha Patil (Pediatrics)';
+
+    vaccine.status = 'GIVEN';
+    vaccine.administeredDate = todayDate;
+    vaccine.administeredBy = administeredBy;
+    if (params.batchNumber) vaccine.batchNumber = params.batchNumber;
+    if (params.site) vaccine.site = params.site;
+    if (params.notes) vaccine.notes = params.notes;
+
+    // Timeline event
+    patient.timeline.unshift({
+      id: `TL-VAC-${Date.now()}`,
+      date: todayDate,
+      time: nowTime,
+      title: `Vaccine Administered: ${vaccine.vaccineName} (${vaccine.vaccineCode})`,
+      actor: administeredBy,
+      details: `Administered dose ${vaccine.dosage || vaccine.dose || '0.5ml'} via ${vaccine.route} at ${vaccine.site}. Batch #${vaccine.batchNumber || 'MCH-V-2026'}. Recorded in digital MCP immunization schedule.`
+    });
+
+    // WhatsApp Notification to Parents
+    patient.whatsappMessages.push({
+      id: `WA-VAC-${Date.now()}`,
+      direction: 'outgoing',
+      type: 'follow_up',
+      text: `Continuum Immunization Update for ${patient.name}: ${vaccine.vaccineName} was administered successfully on ${todayDate}. Batch: ${vaccine.batchNumber || 'Verified'}. Digital MCP card record updated.`,
+      timestamp: nowTime,
+      delivered: true
+    });
+
+    // Integration Backbone event
+    integrationBackbone.logEvent({
+      sourceModule: 'DOCTOR_STATION',
+      targetModule: 'EHR_CORE',
+      eventType: 'VACCINE_ADMINISTERED',
+      title: `Vaccination Recorded: ${patient.name} - ${vaccine.vaccineName}`,
+      details: `${vaccine.vaccineName} (${vaccine.vaccineCode}) administered to ${patient.name} by ${administeredBy}. Batch: ${vaccine.batchNumber || 'N/A'}.`,
+      patientId: patient.id,
+      patientName: patient.name,
+      doctorName: administeredBy,
+      payloadSummary: JSON.stringify({ vaccineCode: vaccine.vaccineCode, batch: vaccine.batchNumber, site: vaccine.site }),
+      status: 'SUCCESS'
+    });
+
+    this.refreshPatientJourney(patient.id);
+    this.notify();
+    return true;
+  }
+
+  /**
+   * Order a stage-specific maternal test protocol panel
+   */
+  orderMaternalTestProtocol(params: {
+    patientId: string;
+    testNames: string[];
+    stage?: MaternalClinicalStage;
+    priority?: 'Routine' | 'Urgent' | 'Stat';
+    requestedBy?: string;
+  }): LabReferral[] {
+    const patient = this.patients.find(p => p.id === params.patientId);
+    if (!patient) throw new Error('Patient not found');
+
+    const createdReferrals: LabReferral[] = [];
+    const stageLabel = params.stage ? ` [${params.stage}]` : '';
+
+    params.testNames.forEach(testName => {
+      const ref = this.createLabReferral({
+        patientId: patient.id,
+        testName,
+        priority: params.priority || 'Routine',
+        requestedBy: params.requestedBy || patient.assignedDoctor || 'Dr. Anita Rao',
+        notes: `Maternal Clinical Protocol Test${stageLabel}. Indication: ${patient.isPregnant ? 'Antenatal Screen' : 'Postnatal Care'}`
+      });
+      createdReferrals.push(ref);
+    });
+
+    integrationBackbone.logEvent({
+      sourceModule: 'DOCTOR_STATION',
+      targetModule: 'PATHOLOGY_LAB',
+      eventType: 'MATERNAL_TEST_ORDERED',
+      title: `Maternal Protocol Ordered: ${patient.name} (${params.testNames.length} tests)`,
+      details: `Doctor ordered ${params.testNames.length} protocol tests for ${params.stage || 'Maternal Care'}: ${params.testNames.join(', ')}.`,
+      patientId: patient.id,
+      patientName: patient.name,
+      doctorName: params.requestedBy || patient.assignedDoctor,
+      payloadSummary: JSON.stringify({ stage: params.stage, tests: params.testNames }),
+      status: 'SUCCESS'
+    });
+
+    this.refreshPatientJourney(patient.id);
+    this.notify();
+    return createdReferrals;
   }
 
   // --- Doctor Workflow ---

@@ -51,7 +51,11 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
   const [billingScheme, setBillingScheme] = useState<'JSSK / NHM (Free Antenatal)' | 'General OPD (Paid - ₹300)' | 'Specialty OPD (Paid - ₹500)'>('JSSK / NHM (Free Antenatal)');
   const [consultationFee, setConsultationFee] = useState<number>(0);
 
-  // Step 3: Basic OPD / Pregnancy Information
+  // Step 3: Pathway & Clinical Details
+  type PatientEnrollmentPathway = 'ANC' | 'PNC' | 'NEWBORN' | 'GENERAL';
+  const [enrollmentPathway, setEnrollmentPathway] = useState<PatientEnrollmentPathway>('ANC');
+
+  // Antenatal
   const [isPregnant, setIsPregnant] = useState(true);
   const [lmp, setLmp] = useState('2026-03-01');
   const [gestationalAgeWeeks, setGestationalAgeWeeks] = useState(28);
@@ -60,9 +64,47 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
   const [gravida, setGravida] = useState(2);
   const [para, setPara] = useState(1);
   const [selectedFlags, setSelectedFlags] = useState<string[]>(['Rh Negative (O-)']);
+
+  // Newborn specific
+  const [birthWeightKg, setBirthWeightKg] = useState<number>(3.1);
+  const [deliveryType, setDeliveryType] = useState<'Normal Vaginal' | 'Caesarean (LSCS)' | 'Assisted Vacuum/Forceps'>('Normal Vaginal');
+  const [maternalBloodGroup, setMaternalBloodGroup] = useState<string>('B Positive (B+)');
+
+  // Postnatal specific
+  const [deliveryDate, setDeliveryDate] = useState<string>('2026-08-28');
+  const [infantFeeding, setInfantFeeding] = useState<'Exclusive Breastfeeding' | 'Formula' | 'Mixed'>('Exclusive Breastfeeding');
+  const [postnatalComplications, setPostnatalComplications] = useState<string[]>(['History of GDM']);
+
   const [visitReason, setVisitReason] = useState('Antenatal follow-up & Glucose screening');
 
   const availableFlags = ['Rh Negative (O-)', 'Mild Anaemia', 'Previous LSCS', 'GDM suspect', 'Hypertension'];
+
+  const handlePathwaySelect = (pathway: PatientEnrollmentPathway) => {
+    setEnrollmentPathway(pathway);
+    if (pathway === 'ANC') {
+      setIsPregnant(true);
+      setBillingScheme('JSSK / NHM (Free Antenatal)');
+      setConsultationFee(0);
+      setVisitReason('Antenatal follow-up & Glucose screening');
+    } else if (pathway === 'PNC') {
+      setIsPregnant(false);
+      setBillingScheme('JSSK / NHM (Free Antenatal)');
+      setConsultationFee(0);
+      setVisitReason('Postnatal 6-week maternal recovery & 75g OGTT check');
+    } else if (pathway === 'NEWBORN') {
+      setIsPregnant(false);
+      setAge(0);
+      setBillingScheme('JSSK / NHM (Free Antenatal)');
+      setConsultationFee(0);
+      setVisitReason('Newborn routine checkup & 6-week immunization dose');
+      if (!name || name === 'Sunita Das') setName('Baby Reyansh');
+    } else {
+      setIsPregnant(false);
+      setBillingScheme('General OPD (Paid - ₹300)');
+      setConsultationFee(300);
+      setVisitReason('Gynaecological consultation / health check');
+    }
+  };
 
   const handleSendOtp = () => {
     setOtpSent(true);
@@ -76,9 +118,9 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
 
   const handleRetrieveAbha = () => {
     setAbhaRetrieved(true);
-    setName('Sunita Das');
-    setAge(28);
-    setGender('female');
+    setName(enrollmentPathway === 'NEWBORN' ? 'Baby Reyansh' : 'Sunita Das');
+    setAge(enrollmentPathway === 'NEWBORN' ? 0 : 28);
+    setGender(enrollmentPathway === 'NEWBORN' ? 'male' : 'female');
     setAddress('Unkal, Hubballi, Karnataka - 580031');
   };
 
@@ -86,7 +128,7 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
   const handleSkipAbha = () => {
     setHasAbhaConsent(false);
     setAbhaId('Skipped (Consent Declined)');
-    if (!name) setName('Amina Begum');
+    if (!name) setName(enrollmentPathway === 'NEWBORN' ? 'Baby of Sunita' : 'Amina Begum');
     setStep(3);
   };
 
@@ -104,19 +146,36 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
   const handleStartOpdVisit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    const isNewbornPatient = enrollmentPathway === 'NEWBORN';
+    const isAncPatient = enrollmentPathway === 'ANC';
+    const isPncPatient = enrollmentPathway === 'PNC';
+
     opdStore.startOpdVisit({
       mobile,
       abhaId: hasAbhaConsent ? abhaId : 'Skipped (Consent Declined)',
       hasAbhaConsent,
-      name: name || 'Sunita Das',
-      age,
-      gender,
+      name: name || (isNewbornPatient ? 'Baby Reyansh' : 'Sunita Das'),
+      age: isNewbornPatient ? 0 : age,
+      gender: isNewbornPatient ? gender : gender,
+      dob: isNewbornPatient ? '2026-09-19' : dob,
       address,
       preferredLanguage,
       consultationFee,
       billingScheme,
-      isPregnant,
-      pregnancy: isPregnant ? {
+      isPregnant: isAncPatient,
+      isNewborn: isNewbornPatient,
+      birthDetails: isNewbornPatient ? {
+        birthWeightKg,
+        deliveryType,
+        maternalBloodGroup
+      } : undefined,
+      postnatalDetails: isPncPatient ? {
+        deliveryDate,
+        deliveryType,
+        infantFeeding,
+        complications: postnatalComplications
+      } : undefined,
+      pregnancy: isAncPatient ? {
         lmp,
         gestationalAgeWeeks,
         edd: '15 Dec 2026',
@@ -127,7 +186,7 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
         clinicalFlags: selectedFlags
       } : undefined,
       visitReason,
-      visitType: isPregnant ? 'ANC' : 'General'
+      visitType: isNewbornPatient ? 'Immunisation' : isAncPatient ? 'ANC' : isPncPatient ? 'PNC' : 'General'
     });
 
     onPatientEnrolled();
@@ -495,20 +554,40 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
               </div>
             </div>
 
-            {/* Antenatal details toggle */}
-            <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
-              <label className="flex items-center justify-between cursor-pointer font-bold text-slate-800">
-                <span>Is this an Antenatal / Obstetric visit?</span>
-                <input
-                  type="checkbox"
-                  checked={isPregnant}
-                  onChange={(e) => setIsPregnant(e.target.checked)}
-                  className="rounded text-teal-800 w-4 h-4 cursor-pointer"
-                />
-              </label>
+            {/* Clinical Care Pathway Selection */}
+            <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+              <span className="font-extrabold text-slate-900 block text-xs">
+                Clinical Care Pathway &amp; Patient Category:
+              </span>
 
-              {isPregnant && (
-                <div className="pt-2 grid grid-cols-2 gap-2 text-xs">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {[
+                  { id: 'ANC', label: 'Antenatal Mother', sub: 'Pregnancy Care' },
+                  { id: 'PNC', label: 'Postnatal Mother', sub: 'Postpartum (PNC)' },
+                  { id: 'NEWBORN', label: 'Newborn / Infant', sub: 'NIS Immunization' },
+                  { id: 'GENERAL', label: 'General / Gynae', sub: 'OPD Consultation' }
+                ].map(p => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => handlePathwaySelect(p.id as any)}
+                    className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
+                      enrollmentPathway === p.id
+                        ? 'bg-teal-900 text-white border-teal-950 shadow-xs'
+                        : 'bg-white text-slate-800 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span className="font-bold text-xs">{p.label}</span>
+                    <span className={`text-[9px] mt-0.5 ${enrollmentPathway === p.id ? 'text-teal-200' : 'text-slate-500'}`}>
+                      {p.sub}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Pathway 1: Antenatal Details */}
+              {enrollmentPathway === 'ANC' && (
+                <div className="pt-2 border-t border-slate-200 grid grid-cols-2 gap-2 text-xs">
                   <div>
                     <label className="block text-slate-600 font-semibold mb-0.5">Gestational Age (Weeks)</label>
                     <input
@@ -557,6 +636,95 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
                         </button>
                       ))}
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Pathway 2: Postnatal Details */}
+              {enrollmentPathway === 'PNC' && (
+                <div className="pt-2 border-t border-slate-200 grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <label className="block text-slate-600 font-semibold mb-0.5">Delivery Date</label>
+                    <input
+                      type="date"
+                      value={deliveryDate}
+                      onChange={(e) => setDeliveryDate(e.target.value)}
+                      className="w-full p-1.5 border border-slate-200 rounded-lg bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-600 font-semibold mb-0.5">Delivery Type</label>
+                    <select
+                      value={deliveryType}
+                      onChange={(e) => setDeliveryType(e.target.value as any)}
+                      className="w-full p-1.5 border border-slate-200 rounded-lg bg-white"
+                    >
+                      <option value="Normal Vaginal">Normal Vaginal</option>
+                      <option value="Caesarean (LSCS)">Caesarean (LSCS)</option>
+                      <option value="Assisted Vacuum/Forceps">Assisted Vacuum/Forceps</option>
+                    </select>
+                  </div>
+
+                  <div className="col-span-2">
+                    <label className="block text-slate-600 font-semibold mb-0.5">Infant Feeding Mode</label>
+                    <select
+                      value={infantFeeding}
+                      onChange={(e) => setInfantFeeding(e.target.value as any)}
+                      className="w-full p-1.5 border border-slate-200 rounded-lg bg-white"
+                    >
+                      <option value="Exclusive Breastfeeding">Exclusive Breastfeeding (EBF)</option>
+                      <option value="Formula">Formula Feeding</option>
+                      <option value="Mixed">Mixed Feeding</option>
+                    </select>
+                  </div>
+
+                  <div className="col-span-2 p-2 bg-purple-50 rounded-xl border border-purple-200 text-[10px] text-purple-900">
+                    🔬 Postnatal diagnostic protocols (Day 1–3 and 6-Week 75g OGTT GDM reclassification, postpartum thyroid TSH, and EPDS) will be active.
+                  </div>
+                </div>
+              )}
+
+              {/* Pathway 3: Newborn Details */}
+              {enrollmentPathway === 'NEWBORN' && (
+                <div className="pt-2 border-t border-slate-200 grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <label className="block text-slate-600 font-semibold mb-0.5">Birth Weight (kg)</label>
+                    <input
+                      type="number"
+                      step="0.05"
+                      value={birthWeightKg}
+                      onChange={(e) => setBirthWeightKg(Number(e.target.value))}
+                      className="w-full p-1.5 border border-slate-200 rounded-lg bg-white font-bold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-600 font-semibold mb-0.5">Delivery Type</label>
+                    <select
+                      value={deliveryType}
+                      onChange={(e) => setDeliveryType(e.target.value as any)}
+                      className="w-full p-1.5 border border-slate-200 rounded-lg bg-white"
+                    >
+                      <option value="Normal Vaginal">Normal Vaginal</option>
+                      <option value="Caesarean (LSCS)">Caesarean (LSCS)</option>
+                      <option value="Assisted Vacuum/Forceps">Assisted Vacuum/Forceps</option>
+                    </select>
+                  </div>
+
+                  <div className="col-span-2">
+                    <label className="block text-slate-600 font-semibold mb-0.5">Maternal Blood Group</label>
+                    <input
+                      type="text"
+                      value={maternalBloodGroup}
+                      onChange={(e) => setMaternalBloodGroup(e.target.value)}
+                      placeholder="e.g. B Positive (B+)"
+                      className="w-full p-1.5 border border-slate-200 rounded-lg bg-white"
+                    />
+                  </div>
+
+                  <div className="col-span-2 p-2 bg-sky-50 rounded-xl border border-sky-200 text-[10px] text-sky-900">
+                    👶 National Immunization Schedule (Birth, 6w, 10w, 14w, 9-12m, 16-24m, 5-6y) with digital MCP Card tracking and WhatsApp alerts will be auto-generated.
                   </div>
                 </div>
               )}

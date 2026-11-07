@@ -35,7 +35,6 @@ import { integrationBackbone } from '../../services/integrationBackbone';
 import { authService } from '../../services/authService';
 import { ondcNetworkService } from '../../services/ondcNetworkService';
 import { OndcVendorOnboardingModal } from '../ondc/OndcVendorOnboardingModal';
-import { TestCenterModal } from '../testing/TestCenterModal';
 import { DoctorProfile, HospitalRoom, DiagnosticLabConfig, OpdPatient } from '../../types';
 
 interface AdminPortalViewProps {
@@ -62,7 +61,6 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ onNavigateToPo
   const [showReallocateLabModal, setShowReallocateLabModal] = useState<DoctorProfile | null>(null);
   const [showTransferPatientModal, setShowTransferPatientModal] = useState<OpdPatient | null>(null);
   const [showOndcOnboardModal, setShowOndcOnboardModal] = useState(false);
-  const [showTestCenterModal, setShowTestCenterModal] = useState(false);
 
   // New Doctor Form state
   const [newDocName, setNewDocName] = useState('');
@@ -178,22 +176,6 @@ export const AdminPortalView: React.FC<AdminPortalViewProps> = ({ onNavigateToPo
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Add Doctor</span>
-            </button>
-
-            <button
-              onClick={() => setShowTestCenterModal(true)}
-              className="px-3.5 py-2 rounded-lg bg-gradient-to-r from-purple-900 to-indigo-900 hover:from-purple-800 hover:to-indigo-800 text-amber-300 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer shadow-xs border border-purple-700/60"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-              <span>QA Suite &amp; PDF</span>
-            </button>
-
-            <button
-              onClick={handleTriggerSimulation}
-              className="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-200 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer"
-            >
-              <Zap className="w-3.5 h-3.5 text-rose-400" />
-              <span>Test Integration</span>
             </button>
           </div>
         </div>

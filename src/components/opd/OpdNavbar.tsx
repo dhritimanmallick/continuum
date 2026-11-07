@@ -12,13 +12,13 @@ import {
   Smartphone,
   Radio,
   HeartHandshake,
-  Award
+  Award,
+  Video
 } from 'lucide-react';
 import { OpdUserRole, OpdStats, PortalType, OpdRole, AuthUser } from '../../types';
 import { opdStore } from '../../services/opdStore';
 import { authService } from '../../services/authService';
 import { OndcVendorOnboardingModal } from '../ondc/OndcVendorOnboardingModal';
-import { TestCenterModal } from '../testing/TestCenterModal';
 import { AndroidApkModal } from '../android/AndroidApkModal';
 
 interface OpdNavbarProps {
@@ -29,6 +29,13 @@ interface OpdNavbarProps {
   stats: OpdStats;
   onOpenWhatsAppView: () => void;
   onOpenCareJourney?: () => void;
+  onOpenPatientHub?: () => void;
+  onOpenKnowledgeLibrary?: () => void;
+  onOpenCostEstimator?: () => void;
+  onOpenDoctorCounselling?: () => void;
+  onOpenLabourTracker?: () => void;
+  onOpenNotifications?: () => void;
+  onOpenVideoTour?: () => void;
   onLogout?: () => void;
 }
 
@@ -40,14 +47,21 @@ export const OpdNavbar: React.FC<OpdNavbarProps> = ({
   stats,
   onOpenWhatsAppView,
   onOpenCareJourney,
+  onOpenPatientHub,
+  onOpenKnowledgeLibrary,
+  onOpenCostEstimator,
+  onOpenDoctorCounselling,
+  onOpenLabourTracker,
+  onOpenNotifications,
+  onOpenVideoTour,
   onLogout
 }) => {
+
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showOndcModal, setShowOndcModal] = useState(false);
-  const [showTestModal, setShowTestModal] = useState(false);
   const [showApkModal, setShowApkModal] = useState(false);
   const currentUser = authService.getCurrentUser();
-  const allUsers = authService.getUsers();
+  const allUsers = authService.getUsers().filter(u => u.role !== 'PATIENT');
   const currentDoctor = opdStore.getCurrentDoctor();
   const facility = opdStore.getHospitalFacility();
 
@@ -190,31 +204,34 @@ export const OpdNavbar: React.FC<OpdNavbarProps> = ({
             )}
           </div>
 
+
+          {onOpenVideoTour && (
+            <button
+              onClick={onOpenVideoTour}
+              className="text-purple-200 hover:text-white font-bold flex items-center gap-1.5 cursor-pointer bg-gradient-to-r from-purple-900 to-indigo-900 hover:from-purple-800 hover:to-indigo-800 px-2.5 py-1 rounded-lg border border-purple-600/70 transition text-xs shadow-xs"
+              title="Watch Complete System Video Tour covering all 8 users and core functionalities"
+            >
+              <Video className="w-3.5 h-3.5 text-purple-300 animate-pulse" />
+              <span className="hidden sm:inline">🎬 Video Tour</span>
+            </button>
+          )}
+
           <button
             onClick={() => onOpenCareJourney && onOpenCareJourney()}
             className="text-teal-200 hover:text-white font-bold flex items-center gap-1.5 cursor-pointer bg-gradient-to-r from-teal-900 to-emerald-900 hover:from-teal-800 hover:to-emerald-800 px-2.5 py-1 rounded-lg border border-teal-600/70 transition text-xs shadow-xs"
             title="My Care Journey — All OPD Patient Milestones & Continuity Achievements"
           >
             <Award className="w-3.5 h-3.5 text-amber-300" />
-            <span>🌟 My Care Journey</span>
+            <span className="hidden sm:inline">🌟 My Care Journey</span>
           </button>
 
           <button
             onClick={() => setShowApkModal(true)}
-            className="text-rose-200 hover:text-white font-bold flex items-center gap-1.5 cursor-pointer bg-gradient-to-r from-rose-900 to-pink-900 hover:from-rose-800 hover:to-pink-800 px-2.5 py-1 rounded-lg border border-rose-600/70 transition text-xs shadow-xs"
+            className="text-rose-200 hover:text-white font-bold flex items-center gap-1.5 cursor-pointer bg-gradient-to-r from-rose-900 to-pink-900 hover:from-rose-800 hover:to-pink-800 px-2 py-1 rounded-lg border border-rose-600/70 transition text-xs shadow-xs"
             title="Where is the APK? Android Installation & Download Center"
           >
             <Smartphone className="w-3.5 h-3.5 text-rose-300" />
-            <span>📱 Android APK &amp; App</span>
-          </button>
-
-          <button
-            onClick={() => setShowTestModal(true)}
-            className="text-amber-300 hover:text-white font-bold flex items-center gap-1.5 cursor-pointer bg-gradient-to-r from-indigo-900 to-purple-900 hover:from-indigo-800 hover:to-purple-800 px-2.5 py-1 rounded-lg border border-indigo-600/60 transition text-xs shadow-xs"
-            title="Open Interactive QA Testing Suite & PDF Export"
-          >
-            <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-            <span>🧪 QA Suite &amp; PDF</span>
+            <span className="hidden sm:inline">📱 APK</span>
           </button>
 
           <button 
@@ -245,6 +262,17 @@ export const OpdNavbar: React.FC<OpdNavbarProps> = ({
 
         {/* Portal Navigation Tabs */}
         <div className="flex items-center gap-1.5 bg-slate-100/90 p-1 rounded-xl text-xs font-semibold overflow-x-auto">
+          {/* Patient Portal Switcher */}
+          <button
+            onClick={() => {
+              authService.quickLogin('user-patient-sunita');
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition cursor-pointer shrink-0 text-rose-800 bg-rose-100/80 hover:bg-rose-200 border border-rose-300 font-extrabold"
+            title="Switch directly to Individual Patient & Family Portal (Sunita Das)"
+          >
+            <span>🤰 Patient Portal</span>
+          </button>
+
           {/* Portal 0: Hospital Admin Portal */}
           <button
             onClick={() => {
@@ -403,17 +431,6 @@ export const OpdNavbar: React.FC<OpdNavbarProps> = ({
           onSuccess={(newUser) => {
             setShowOndcModal(false);
             handleUserSelect(newUser);
-          }}
-        />
-      )}
-
-      {/* QA Testing Suite & PDF Export Modal */}
-      {showTestModal && (
-        <TestCenterModal
-          onClose={() => setShowTestModal(false)}
-          onNavigateToPortal={(portal, role) => {
-            onPortalChange(portal);
-            if (role) onOpdRoleChange(role);
           }}
         />
       )}

@@ -200,6 +200,79 @@ export const INITIAL_AUTH_USERS: AuthUser[] = [
     lastLogin: 'Active now',
     vendorType: 'PHARMACY',
     vendorPartnerId: 'pharm-inhouse'
+  },
+  {
+    id: 'user-patient-sunita',
+    username: 'sunita',
+    name: 'Sunita Das',
+    title: 'Expectant Mother (28w Gestation, Primigravida)',
+    role: 'PATIENT',
+    department: 'Patient & Family Portal',
+    avatar: '🤰',
+    avatarBg: 'bg-rose-100 text-rose-800 border-rose-300',
+    email: 'sunita.das@gmail.com',
+    phone: '+91 98451 12340',
+    allocatedRoom: 'Personal Health Portal',
+    facilityName: 'St. Anne Mother & Child Hospital & Nursing Home',
+    isOnline: true,
+    lastLogin: 'Active now',
+    patientId: 'PAT-104',
+    gestationalWeeks: 28
+  },
+  {
+    id: 'user-patient-rajesh-fam',
+    username: 'rajesh_fam',
+    name: 'Rajesh Das',
+    title: 'Nominated Spouse & Emergency Delivery Contact',
+    role: 'PATIENT',
+    department: 'Patient & Family Portal (Family Member Access)',
+    avatar: '👨',
+    avatarBg: 'bg-blue-100 text-blue-800 border-blue-300',
+    email: 'rajesh.das@gmail.com',
+    phone: '+91 98451 12340',
+    allocatedRoom: 'Family Circle Access',
+    facilityName: 'St. Anne Mother & Child Hospital & Nursing Home',
+    isOnline: true,
+    lastLogin: 'Active now',
+    patientId: 'PAT-104',
+    familyMemberId: 'fam-1',
+    isFamilyMember: true,
+    primaryPatientName: 'Sunita Das',
+    gestationalWeeks: 28
+  },
+  {
+    id: 'user-patient-kavita',
+    username: 'kavita',
+    name: 'Kavita Patil',
+    title: 'Postnatal Mother of Baby Aarav (6w Postpartum)',
+    role: 'PATIENT',
+    department: 'Patient & Family Portal',
+    avatar: '👩‍👧',
+    avatarBg: 'bg-purple-100 text-purple-800 border-purple-300',
+    email: 'kavita.patil@gmail.com',
+    phone: '+91 98452 33410',
+    allocatedRoom: 'Personal Health Portal',
+    facilityName: 'St. Anne Mother & Child Hospital & Nursing Home',
+    isOnline: true,
+    lastLogin: 'Today 10:15 AM',
+    patientId: 'PAT-101'
+  },
+  {
+    id: 'user-patient-pooja',
+    username: 'pooja',
+    name: 'Pooja Verma',
+    title: 'Gynaecology & Endocrine Care Patient',
+    role: 'PATIENT',
+    department: 'Patient & Family Portal',
+    avatar: '🌸',
+    avatarBg: 'bg-pink-100 text-pink-800 border-pink-300',
+    email: 'pooja.verma@gmail.com',
+    phone: '+91 98453 77890',
+    allocatedRoom: 'Personal Health Portal',
+    facilityName: 'St. Anne Mother & Child Hospital & Nursing Home',
+    isOnline: true,
+    lastLogin: 'Yesterday',
+    patientId: 'PAT-102'
   }
 ];
 
@@ -258,10 +331,18 @@ class AuthService {
 
   login(username: string, _password?: string): { success: boolean; user?: AuthUser; error?: string } {
     const cleanUser = username.trim().toLowerCase();
-    const user = this.users.find(u => u.username.toLowerCase() === cleanUser || u.email.toLowerCase() === cleanUser);
+    const digitsOnly = cleanUser.replace(/\D/g, '');
+
+    const user = this.users.find(u => {
+      if (u.username.toLowerCase() === cleanUser) return true;
+      if (u.email.toLowerCase() === cleanUser) return true;
+      if (u.patientId && u.patientId.toLowerCase() === cleanUser) return true;
+      if (digitsOnly.length >= 10 && u.phone.replace(/\D/g, '').includes(digitsOnly)) return true;
+      return false;
+    });
     
     if (!user) {
-      return { success: false, error: 'User account not found. Please select from the verified staff list.' };
+      return { success: false, error: 'Account not found. Please verify username, registered mobile number, or Patient ID.' };
     }
 
     this.currentUser = user;
@@ -273,10 +354,10 @@ class AuthService {
 
     integrationBackbone.logEvent({
       sourceModule: 'ADMIN_PORTAL',
-      targetModule: 'DOCTOR_STATION',
+      targetModule: user.role === 'PATIENT' ? 'PATIENT_APP' : 'DOCTOR_STATION',
       eventType: 'CONSULTATION_STARTED',
-      title: `Staff Session Authenticated: ${user.name}`,
-      details: `${user.name} logged into ${user.department} (${user.role} Role) with full audit access.`,
+      title: `${user.role === 'PATIENT' ? 'Patient Portal' : 'Staff Session'} Authenticated: ${user.name}`,
+      details: `${user.name} logged into ${user.department} (${user.role} Role).`,
       status: 'SUCCESS'
     });
 

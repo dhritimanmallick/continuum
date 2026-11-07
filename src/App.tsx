@@ -17,11 +17,20 @@ import { PatientBasicProfileModal } from './components/opd/PatientBasicProfileMo
 import { MyCareJourneyModal } from './components/opd/MyCareJourneyModal';
 import { VicinityRadarView } from './components/vicinity/VicinityRadarView';
 import { DoctorRevenueDashboard } from './components/vicinity/DoctorRevenueDashboard';
+import { PatientUnifiedDashboardModal } from './components/patient/PatientUnifiedDashboardModal';
+import { PatientPortalView } from './components/patient/PatientPortalView';
+import { KnowledgeLibraryModal } from './components/patient/KnowledgeLibraryModal';
+import { TreatmentCostEstimatorModal } from './components/patient/TreatmentCostEstimatorModal';
+import { EmergencyDoctorCounsellingModal } from './components/patient/EmergencyDoctorCounsellingModal';
+import { LabourDeliveryLiveTrackerModal } from './components/patient/LabourDeliveryLiveTrackerModal';
+import { NotificationCenterModal } from './components/patient/NotificationCenterModal';
+import { SystemVideoTourModal } from './components/video/SystemVideoTourModal';
 import { opdStore } from './services/opdStore';
 import { authService } from './services/authService';
 import { OpdUserRole, OpdPatient, PortalType, OpdRole, AuthUser } from './types';
 
 export default function App() {
+
   const [, setVersion] = useState(0);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(authService.getCurrentUser());
 
@@ -55,6 +64,16 @@ export default function App() {
   const [showCareJourneyModal, setShowCareJourneyModal] = useState(false);
   const [careJourneyPatientId, setCareJourneyPatientId] = useState<string | null>(null);
 
+  // New Comprehensive Patient & Hospital Modules
+  const [showPatientHubModal, setShowPatientHubModal] = useState(false);
+  const [patientHubInitialTab, setPatientHubInitialTab] = useState<'FAMILY' | 'LIBRARY' | 'AI_COUNSELLOR' | 'COSTS' | 'COUNSELLING' | 'LABOUR' | 'NOTIFICATIONS'>('FAMILY');
+  const [showKnowledgeLibraryModal, setShowKnowledgeLibraryModal] = useState(false);
+  const [showCostEstimatorModal, setShowCostEstimatorModal] = useState(false);
+  const [showEmergencyCounsellingModal, setShowEmergencyCounsellingModal] = useState(false);
+  const [showLabourTrackerModal, setShowLabourTrackerModal] = useState(false);
+  const [showNotificationCenterModal, setShowNotificationCenterModal] = useState(false);
+  const [showVideoTourModal, setShowVideoTourModal] = useState(false);
+
   const stats = opdStore.getStats();
 
   const handlePortalChange = (portal: PortalType) => {
@@ -73,36 +92,80 @@ export default function App() {
     setShowWhatsAppModal(true);
   };
 
+  const handleLoginSuccess = (user: AuthUser) => {
+    setCurrentUser(user);
+    if (user.role === 'ADMIN') {
+      handlePortalChange('ADMIN');
+    } else if (user.role === 'DOCTOR') {
+      if (user.doctorId) {
+        opdStore.setDoctorProfile(user.doctorId);
+      }
+      handlePortalChange('OPD');
+      handleOpdRoleChange('DOCTOR');
+    } else if (user.role === 'RECEPTION') {
+      handlePortalChange('OPD');
+      handleOpdRoleChange('RECEPTION');
+    } else if (user.role === 'LAB') {
+      if (user.vendorPartnerId) {
+        opdStore.setSelectedLab(user.vendorPartnerId);
+      }
+      handlePortalChange('LAB');
+    } else if (user.role === 'PHARMA') {
+      if (user.vendorPartnerId) {
+        opdStore.setSelectedPharmacy(user.vendorPartnerId);
+      }
+      handlePortalChange('PHARMA');
+    }
+  };
+
   // If no user is logged in, show the Login and Staff Authentication View
   if (!currentUser) {
     return (
-      <LoginView
-        onLoginSuccess={(user) => {
-          setCurrentUser(user);
-          if (user.role === 'ADMIN') {
-            handlePortalChange('ADMIN');
-          } else if (user.role === 'DOCTOR') {
-            if (user.doctorId) {
-              opdStore.setDoctorProfile(user.doctorId);
-            }
-            handlePortalChange('OPD');
-            handleOpdRoleChange('DOCTOR');
-          } else if (user.role === 'RECEPTION') {
-            handlePortalChange('OPD');
-            handleOpdRoleChange('RECEPTION');
-          } else if (user.role === 'LAB') {
-            if (user.vendorPartnerId) {
-              opdStore.setSelectedLab(user.vendorPartnerId);
-            }
-            handlePortalChange('LAB');
-          } else if (user.role === 'PHARMA') {
-            if (user.vendorPartnerId) {
-              opdStore.setSelectedPharmacy(user.vendorPartnerId);
-            }
-            handlePortalChange('PHARMA');
-          }
-        }}
-      />
+      <>
+        <LoginView
+          onLoginSuccess={handleLoginSuccess}
+          onOpenVideoTour={() => setShowVideoTourModal(true)}
+        />
+        {showVideoTourModal && (
+          <SystemVideoTourModal
+            isOpen={showVideoTourModal}
+            onClose={() => setShowVideoTourModal(false)}
+            onLaunchUser={(user) => {
+              authService.quickLogin(user.id);
+              handleLoginSuccess(user);
+              setShowVideoTourModal(false);
+            }}
+          />
+        )}
+      </>
+    );
+  }
+
+  // INDIVIDUAL LOGIN LEVEL: Patient & Family Portal View
+  if (currentUser.role === 'PATIENT') {
+    return (
+      <>
+        <PatientPortalView
+          currentUser={currentUser}
+          patientId={currentUser.patientId || 'PAT-104'}
+          onLogout={() => {
+            authService.logout();
+            setCurrentUser(null);
+          }}
+          onOpenVideoTour={() => setShowVideoTourModal(true)}
+        />
+        {showVideoTourModal && (
+          <SystemVideoTourModal
+            isOpen={showVideoTourModal}
+            onClose={() => setShowVideoTourModal(false)}
+            onLaunchUser={(user) => {
+              authService.quickLogin(user.id);
+              handleLoginSuccess(user);
+              setShowVideoTourModal(false);
+            }}
+          />
+        )}
+      </>
     );
   }
 
@@ -119,6 +182,28 @@ export default function App() {
         onOpenCareJourney={() => {
           setCareJourneyPatientId(null);
           setShowCareJourneyModal(true);
+        }}
+        onOpenPatientHub={() => {
+          setPatientHubInitialTab('FAMILY');
+          setShowPatientHubModal(true);
+        }}
+        onOpenKnowledgeLibrary={() => {
+          setShowKnowledgeLibraryModal(true);
+        }}
+        onOpenCostEstimator={() => {
+          setShowCostEstimatorModal(true);
+        }}
+        onOpenDoctorCounselling={() => {
+          setShowEmergencyCounsellingModal(true);
+        }}
+        onOpenLabourTracker={() => {
+          setShowLabourTrackerModal(true);
+        }}
+        onOpenNotifications={() => {
+          setShowNotificationCenterModal(true);
+        }}
+        onOpenVideoTour={() => {
+          setShowVideoTourModal(true);
         }}
         onLogout={() => {
           authService.logout();
@@ -226,6 +311,73 @@ export default function App() {
           onClose={() => setShowCareJourneyModal(false)}
         />
       )}
+
+      {/* MODAL 5: Patient & Family Portal Hub (Master Module) */}
+      {showPatientHubModal && (
+        <PatientUnifiedDashboardModal
+          initialTab={patientHubInitialTab}
+          onClose={() => setShowPatientHubModal(false)}
+          onOpenWhatsAppView={handleOpenWhatsAppView}
+          onOpenCareJourney={(pId) => {
+            setCareJourneyPatientId(pId || null);
+            setShowCareJourneyModal(true);
+          }}
+        />
+      )}
+
+      {/* MODAL 6: Digital Knowledge Library & Clinical Guides */}
+      {showKnowledgeLibraryModal && (
+        <KnowledgeLibraryModal
+          onClose={() => setShowKnowledgeLibraryModal(false)}
+          onOpenDoctorCounselling={() => {
+            setShowKnowledgeLibraryModal(false);
+            setShowEmergencyCounsellingModal(true);
+          }}
+        />
+      )}
+
+      {/* MODAL 7: Estimated Treatment Costs & WhatsApp Quotes */}
+      {showCostEstimatorModal && (
+        <TreatmentCostEstimatorModal
+          onClose={() => setShowCostEstimatorModal(false)}
+        />
+      )}
+
+      {/* MODAL 8: Rapid-Access Emergency Doctor Tele-Counselling */}
+      {showEmergencyCounsellingModal && (
+        <EmergencyDoctorCounsellingModal
+          onClose={() => setShowEmergencyCounsellingModal(false)}
+        />
+      )}
+
+      {/* MODAL 9: Labour & Delivery Updates for Consented Family */}
+      {showLabourTrackerModal && (
+        <LabourDeliveryLiveTrackerModal
+          onClose={() => setShowLabourTrackerModal(false)}
+        />
+      )}
+
+      {/* MODAL 10: Unified Notifications & Messaging Hub */}
+      {showNotificationCenterModal && (
+        <NotificationCenterModal
+          onClose={() => setShowNotificationCenterModal(false)}
+          onOpenWhatsAppView={() => handleOpenWhatsAppView()}
+        />
+      )}
+
+      {/* MODAL 11: System Video Tour & 8-Persona Walkthrough */}
+      {showVideoTourModal && (
+        <SystemVideoTourModal
+          isOpen={showVideoTourModal}
+          onClose={() => setShowVideoTourModal(false)}
+          onLaunchUser={(user) => {
+            authService.quickLogin(user.id);
+            handleLoginSuccess(user);
+            setShowVideoTourModal(false);
+          }}
+        />
+      )}
     </div>
   );
 }
+

@@ -7,6 +7,12 @@ import { GoogleGenAI } from '@google/genai';
 import { store } from './src/services/store.ts';
 import { runRuleSimulation } from './src/services/rulesEngine.ts';
 import { abdmService } from './src/services/abdmService.ts';
+import { knowledgeLibraryService, KNOWLEDGE_DOCUMENTS } from './src/services/knowledgeLibraryService.ts';
+import { costEstimatorService } from './src/services/costEstimatorService.ts';
+import { emergencyCounsellingService } from './src/services/emergencyCounsellingService.ts';
+import { labourDeliveryService } from './src/services/labourDeliveryService.ts';
+import { familyService } from './src/services/familyService.ts';
+import { unifiedNotificationService } from './src/services/unifiedNotificationService.ts';
 
 dotenv.config();
 
@@ -284,9 +290,251 @@ Doctor: ${doctorName || 'Dr. Anita Rao'}
   }
 });
 
+// ==========================================
+// MODULE 2: RAG AI KNOWLEDGE COUNSELLING (Grounding & Citations)
+// ==========================================
+app.post('/api/ai/knowledge-counselling', async (req: Request, res: Response) => {
+  try {
+    const { question, language, patientGestation, chatHistory } = req.body;
+    const qLower = (question || '').toLowerCase();
+
+    // 1. Check for High-Risk Emergency Red Flags immediately
+    const isEmergency = 
+      qLower.includes('bleeding') || 
+      qLower.includes('blood') ||
+      qLower.includes('water broke') ||
+      qLower.includes('fluid leak') ||
+      qLower.includes('leaking water') ||
+      (qLower.includes('severe') && (qLower.includes('headache') || qLower.includes('blur') || qLower.includes('vision'))) ||
+      (qLower.includes('kick') && (qLower.includes('stopped') || qLower.includes('no movement') || qLower.includes('decreased') || qLower.includes('less'))) ||
+      (qLower.includes('severe') && qLower.includes('abdominal pain'));
+
+    if (isEmergency) {
+      return res.json({
+        success: true,
+        data: {
+          answer: `🚨 IMMEDIATE CLINICAL RED-FLAG ALERT:
+The symptoms you have described (such as active vaginal bleeding, fluid leakage, decreased or absent fetal movements, severe intractable headache, or severe abdominal pain) are high-risk indicators requiring prompt emergency evaluation. 
+
+Please DO NOT wait for an online tele-counselling appointment or message reply.
+1. Call National Emergency Ambulance: 108 immediately, or
+2. Proceed without delay to District Hospital Casualty / 24/7 Maternity Emergency Ward.
+3. Bring your previous antenatal records and MCP Card.
+
+Our emergency obstetric OT and triage team are on duty 24/7.`,
+          isEmergencyEscalation: true,
+          escalationReason: 'Potentially life-threatening obstetric complication or fetal compromise reported.',
+          citations: [
+            {
+              sourceTitle: 'RCOG Guidelines on Hypertensive Disorders & Preeclampsia Awareness (2023)',
+              chapterOrSection: 'Ch. 1: Recognising Preeclampsia Red Flags & Emergency Symptoms',
+              pageNumber: 18,
+              confidence: 99,
+              excerpt: 'Severe headache unresponsive to analgesics, visual scotomata, epigastric pain, or acute fluid loss require immediate hospital admission.'
+            },
+            {
+              sourceTitle: 'FOGSI Maternal Health & Antenatal Care Manual (2024)',
+              chapterOrSection: 'Ch. 1: Emergency Danger Signs in Pregnancy',
+              pageNumber: 12,
+              confidence: 98,
+              excerpt: 'Vaginal bleeding or sudden cessation of fetal kicks represents an acute obstetric emergency.'
+            }
+          ],
+          suggestedQuestions: [
+            'How do I reach the 24/7 Maternity Emergency Ward?',
+            'What should I pack for emergency admission?',
+            'What is the hospital emergency contact number?'
+          ]
+        }
+      });
+    }
+
+    // 2. RAG Retrieval from approved knowledge base
+    const citations = knowledgeLibraryService.retrieveRelevantSnippets(question, 3);
+    const knowledgeContext = citations.map(c => `[SOURCE: "${c.sourceTitle}" | ${c.chapterOrSection}]: ${c.excerpt}`).join('\n\n');
+
+    const targetLang = language || 'English';
+
+    const systemInstruction = `
+You are the Continuum Maternal & Women's Health Knowledge AI Counsellor, grounded in official clinical literature (FOGSI, RCOG, WHO, and National Health Mission).
+CRITICAL RULES & BOUNDARIES:
+1. Ground your answers strictly in the approved knowledge library context provided below.
+2. Provide specific, transparent references and citations (citing Book, Chapter, or Section name).
+3. Distinguish clearly between educational information and medical advice.
+4. DO NOT diagnose any illness or condition.
+5. DO NOT prescribe medications, adjust dosages, or suggest unauthorized remedies.
+6. If the user asks about dangerous symptoms (bleeding, reduced movement, fluid leak, severe pain), immediately advise them to consult a qualified doctor or visit emergency care.
+7. Respond warmly, clearly, and concisely (2 to 4 paragraphs) in ${targetLang}.
+8. Return a JSON object with:
+   - answer: string (the educational response grounded in approved references)
+   - citations: array of objects with keys: sourceTitle, chapterOrSection, pageNumber, confidence, excerpt
+   - isEmergencyEscalation: boolean (false here)
+   - suggestedQuestions: array of 3 short, relevant follow-up questions
+`;
+
+    const prompt = `
+Knowledge Base Context:
+${knowledgeContext}
+
+Patient Context: ${patientGestation ? `Gestational Age: ${patientGestation}` : 'General Patient / Reproductive Health'}
+Patient's Question: "${question}"
+`;
+
+    let counsellingResult = {
+      answer: `Based on the FOGSI Maternal Health and RCOG clinical reference standards, here is the verified medical guidance:\n\n${citations[0]?.excerpt || 'General antenatal care emphasizes regular clinical follow-up, adequate nutrition, and timely screening.'}\n\nPlease note: This is educational information from verified medical textbooks and does not replace the personal clinical advice of your treating obstetrician Dr. Anita Rao.`,
+      citations: citations.length > 0 ? citations : [
+        {
+          sourceTitle: 'FOGSI Maternal Health & Antenatal Care Manual (2024)',
+          chapterOrSection: 'Ch. 1: First Trimester Viability & Screening',
+          pageNumber: 19,
+          confidence: 90,
+          excerpt: 'Routine antenatal monitoring ensures optimal maternal and fetal outcomes.'
+        }
+      ],
+      isEmergencyEscalation: false,
+      suggestedQuestions: [
+        'What dietary changes are recommended during this trimester?',
+        'When is my next routine ultrasound scan due?',
+        'How do I differentiate normal cramps from true labour?'
+      ]
+    };
+
+    if (process.env.GEMINI_API_KEY) {
+      try {
+        const conversationContents: any[] = [];
+        if (chatHistory && Array.isArray(chatHistory)) {
+          chatHistory.slice(-4).forEach((h: any) => {
+            conversationContents.push({ role: h.role === 'user' ? 'user' : 'model', parts: [{ text: h.text }] });
+          });
+        }
+        conversationContents.push({ role: 'user', parts: [{ text: prompt }] });
+
+        const aiResponse = await ai.models.generateContent({
+          model: 'gemini-3.8-flash',
+          contents: conversationContents,
+          config: {
+            systemInstruction,
+            responseMimeType: 'application/json'
+          }
+        });
+
+        if (aiResponse.text) {
+          const parsed = JSON.parse(aiResponse.text.trim());
+          if (parsed.answer) {
+            counsellingResult = {
+              ...parsed,
+              citations: parsed.citations && parsed.citations.length > 0 ? parsed.citations : citations
+            };
+          }
+        }
+      } catch (err) {
+        console.warn('Gemini knowledge counselling fallback used:', err);
+      }
+    }
+
+    res.json({ success: true, data: counsellingResult });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// MODULE 2: Knowledge Library Reference Endpoint
+app.get('/api/knowledge-library/documents', (req: Request, res: Response) => {
+  const { category, search } = req.query;
+  if (search) {
+    const results = knowledgeLibraryService.searchContent(String(search));
+    return res.json({ success: true, data: results });
+  }
+  if (category) {
+    return res.json({ success: true, data: knowledgeLibraryService.getDocumentsByCategory(category as any) });
+  }
+  res.json({ success: true, data: knowledgeLibraryService.getAllDocuments() });
+});
+
+app.get('/api/knowledge-library/videos', (req: Request, res: Response) => {
+  res.json({ success: true, data: knowledgeLibraryService.getAllVideos() });
+});
+
+// MODULE 3: Treatment Costs & WhatsApp Quotations
+app.get('/api/treatment-costs/packages', (req: Request, res: Response) => {
+  res.json({ success: true, data: costEstimatorService.getAllPackages() });
+});
+
+app.post('/api/treatment-costs/quotations', (req: Request, res: Response) => {
+  try {
+    const quotation = costEstimatorService.createQuotation(req.body);
+    res.status(201).json({ success: true, data: quotation });
+  } catch (error: any) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/treatment-costs/quotations/:id/whatsapp', (req: Request, res: Response) => {
+  try {
+    const success = costEstimatorService.sendQuotationViaWhatsApp(req.params.id);
+    res.json({ success, message: success ? 'Quotation sent via WhatsApp Business API' : 'Quotation not found' });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// MODULE 4: Emergency Doctor Tele-Counselling
+app.get('/api/emergency-counselling/slots', (req: Request, res: Response) => {
+  res.json({ success: true, data: emergencyCounsellingService.getSlots() });
+});
+
+app.post('/api/emergency-counselling/book', (req: Request, res: Response) => {
+  try {
+    const appt = emergencyCounsellingService.bookEmergencySlot(req.body);
+    res.status(201).json({ success: true, data: appt });
+  } catch (error: any) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+// MODULE 5: Labour & Delivery Live Updates
+app.get('/api/labour-delivery/:patientId', (req: Request, res: Response) => {
+  const tracker = labourDeliveryService.getTracker(req.params.patientId);
+  res.json({ success: true, data: tracker });
+});
+
+app.post('/api/labour-delivery/:patientId/update-stage', (req: Request, res: Response) => {
+  try {
+    const update = labourDeliveryService.updateStage({
+      patientId: req.params.patientId,
+      ...req.body
+    });
+    res.status(201).json({ success: true, data: update });
+  } catch (error: any) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+// MODULE 1: Family Member Management
+app.get('/api/family-members/:patientId', (req: Request, res: Response) => {
+  const members = familyService.getMembersForPatient(req.params.patientId);
+  res.json({ success: true, data: members });
+});
+
+app.post('/api/family-members', (req: Request, res: Response) => {
+  try {
+    const member = familyService.addMember(req.body);
+    res.status(201).json({ success: true, data: member });
+  } catch (error: any) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+// MODULE 6: Unified Notifications
+app.get('/api/notifications/:patientId', (req: Request, res: Response) => {
+  const notifs = unifiedNotificationService.getNotificationsForPatient(req.params.patientId);
+  const prefs = unifiedNotificationService.getPreferences(req.params.patientId);
+  res.json({ success: true, data: { notifications: notifs, preferences: prefs } });
+});
 
 // Dashboard Metrics (Section 4 & 31)
 app.get('/api/dashboard', (req: Request, res: Response) => {
+
   try {
     const metrics = store.getDashboardMetrics();
     res.json({ success: true, data: metrics });

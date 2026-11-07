@@ -39,7 +39,16 @@ import { PatientDatabaseView } from './PatientDatabaseView';
 import { DiagnosticAnalyserModal } from './DiagnosticAnalyserModal';
 import { DoctorRevenueDashboard } from '../vicinity/DoctorRevenueDashboard';
 import { MyCareJourneyPanel } from './MyCareJourneyPanel';
-import { Award, Compass } from 'lucide-react';
+import { NewbornVaccinationCard } from './NewbornVaccinationCard';
+import { MaternalTestingPanel } from './MaternalTestingPanel';
+import { HospitalLabourDeliveryPanel } from '../hospital/HospitalLabourDeliveryPanel';
+import { EmergencyCounsellingQueuePanel } from '../hospital/EmergencyCounsellingQueuePanel';
+import { LabourDeliveryLiveTrackerModal } from '../patient/LabourDeliveryLiveTrackerModal';
+import { TreatmentCostEstimatorModal } from '../patient/TreatmentCostEstimatorModal';
+import { KnowledgeLibraryModal } from '../patient/KnowledgeLibraryModal';
+import { AbhaPriorRecordsModal } from './AbhaPriorRecordsModal';
+import { Award, Compass, Syringe, PhoneCall, Calculator, BookOpen, ShieldCheck } from 'lucide-react';
+
 
 interface DoctorViewProps {
   onOpenWhatsAppView?: (patientId?: string) => void;
@@ -145,9 +154,16 @@ export const DoctorView: React.FC<DoctorViewProps> = ({ onOpenWhatsAppView }) =>
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [selectedPatientForPrintRx, setSelectedPatientForPrintRx] = useState<OpdPatient | null>(null);
   const [selectedOrderForAnalyser, setSelectedOrderForAnalyser] = useState<LabOrder | null>(null);
-  const [doctorWorkspaceMode, setDoctorWorkspaceMode] = useState<'CONSULTATION' | 'DASHBOARD' | 'DATABASE' | 'CARE_JOURNEY' | 'REVENUES'>('CONSULTATION');
+  const [doctorWorkspaceMode, setDoctorWorkspaceMode] = useState<
+    'CONSULTATION' | 'DASHBOARD' | 'DATABASE' | 'CARE_JOURNEY' | 'REVENUES' | 'LABOUR_MONITOR' | 'TELE_COUNSELLING'
+  >('CONSULTATION');
+  const [showLabourTrackerModalId, setShowLabourTrackerModalId] = useState<string | null>(null);
+  const [showCostEstimatorModal, setShowCostEstimatorModal] = useState<boolean>(false);
+  const [showKnowledgeLibraryModal, setShowKnowledgeLibraryModal] = useState<boolean>(false);
+  const [showAbhaPriorRecordsModal, setShowAbhaPriorRecordsModal] = useState<boolean>(false);
 
   const selectedPatient = patients.find(p => p.id === selectedPatientId) || null;
+
 
   // Active Consultation Form State
   const [bp, setBp] = useState('118/76 mmHg');
@@ -155,6 +171,9 @@ export const DoctorView: React.FC<DoctorViewProps> = ({ onOpenWhatsAppView }) =>
   const [fundalHeightCm, setFundalHeightCm] = useState<number>(28);
   const [foetalHeartRate, setFoetalHeartRate] = useState('142 bpm regular');
   const [pulse, setPulse] = useState<number>(78);
+  const [headCircumferenceCm, setHeadCircumferenceCm] = useState<number>(36.5);
+  const [lengthCm, setLengthCm] = useState<number>(52);
+  const [temperatureF, setTemperatureF] = useState<string>('98.4 °F');
   const [doctorNotes, setDoctorNotes] = useState('');
   
   // Clinician-Defined Care Pathway & Follow-Up State
@@ -208,23 +227,65 @@ export const DoctorView: React.FC<DoctorViewProps> = ({ onOpenWhatsAppView }) =>
   // When patient is opened
   const handleSelectPatient = (patient: OpdPatient) => {
     setSelectedPatientId(patient.id);
-    const defaultNote = patient.doctorNotes || (patient.isPregnant 
-      ? `Antenatal consultation for ${patient.name}. Gestation: ${patient.pregnancyDetails?.gestationalAgeWeeks || 28} weeks. Healthy fetal rhythm.`
-      : `OPD clinical consultation for ${patient.name}. Reason: ${patient.visitReason}.`);
+    const isPediatric = !!(patient.isNewborn || patient.age <= 5 || patient.clinicId === 'opd-ped' || patient.visitType === 'Immunisation');
+    const isMaternal = !!(patient.isPregnant || patient.maternalStage || patient.visitType === 'ANC' || patient.visitType === 'PNC' || patient.postnatalDetails);
+
+    const defaultNote = patient.doctorNotes || (
+      patient.isNewborn 
+        ? `Pediatric well-baby examination for ${patient.name}. Age: ${patient.age > 0 ? `${patient.age}y` : 'Newborn (3 weeks)'}. Weight: ${patient.birthDetails?.birthWeightKg || 3.2} kg. Immunization milestone review & maternal feeding check.`
+        : patient.isPregnant 
+        ? `Antenatal consultation for ${patient.name}. Gestation: ${patient.pregnancyDetails?.gestationalAgeWeeks || 28} weeks. Healthy fetal rhythm.`
+        : patient.postnatalDetails
+        ? `Postnatal examination for ${patient.name}. Delivered on ${patient.postnatalDetails.deliveryDate || 'recently'}. Postpartum recovery & maternal screening.`
+        : `OPD clinical consultation for ${patient.name}. Reason: ${patient.visitReason}.`
+    );
     setDoctorNotes(defaultNote);
+
+    // Default prescriptions adapted to patient type
+    if (isPediatric) {
+      setMedicines([
+        {
+          id: 'med-ped-1',
+          medicineName: 'Syp. Vitamin D3 Drops (400 IU/ml)',
+          dosage: '1 ml (400 IU)',
+          frequency: 'Once daily (OD)',
+          timing: 'Morning after feeding',
+          duration: '30 days',
+          quantity: 1,
+          instructions: 'Administer directly via dropper for bone and immune development.',
+          isJanAushadhiAvailable: true,
+          genericEquivalent: 'Cholecalciferol Drops IP 400 IU'
+        },
+        {
+          id: 'med-ped-2',
+          medicineName: 'Pediatric Paracetamol Oral Suspension (100mg/ml)',
+          dosage: '0.6 ml SOS',
+          frequency: 'As needed (SOS for fever > 100°F)',
+          timing: 'Post-immunization if fever occurs',
+          duration: '3 days',
+          quantity: 1,
+          instructions: 'Maximum 4 doses in 24 hours. Minimum 6 hours gap.',
+          isJanAushadhiAvailable: true,
+          genericEquivalent: 'Paracetamol Paediatric Drops IP'
+        }
+      ]);
+    }
     
     // Set Care Pathway & Follow-up state
-    setSelectedCareJourneyType(patient.careJourney?.type || (patient.isPregnant ? 'PREGNANCY' : 'GYNECOLOGY'));
+    setSelectedCareJourneyType(patient.careJourney?.type || (patient.isPregnant ? 'PREGNANCY' : patient.isNewborn ? 'GENERAL_OPD' : patient.postnatalDetails ? 'POSTNATAL' : 'GYNECOLOGY'));
     setIsFollowUpRequired(patient.followUpStatus !== 'Not Required');
     setFollowUpDate(patient.followUpDate || '24 Oct 2026');
-    setFollowUpInstruction(patient.followUpInstruction || '');
+    setFollowUpInstruction(patient.followUpInstruction || (isPediatric ? '6-Week Vaccination & growth monitoring' : ''));
 
     if (patient.vitals) {
       setBp(patient.vitals.bp || '118/76 mmHg');
-      setWeightKg(patient.vitals.weightKg || 59);
+      setWeightKg(patient.vitals.weightKg || (isPediatric ? 3.4 : 59));
       setFundalHeightCm(patient.vitals.fundalHeightCm || 28);
       setFoetalHeartRate(patient.vitals.foetalHeartRate || '142 bpm regular');
-      setPulse(patient.vitals.pulse || 78);
+      setPulse(patient.vitals.pulse || (isPediatric ? 132 : 78));
+    } else if (isPediatric) {
+      setWeightKg(3.4);
+      setPulse(132);
     }
   };
 
@@ -454,8 +515,51 @@ export const DoctorView: React.FC<DoctorViewProps> = ({ onOpenWhatsAppView }) =>
             <Award className="w-3.5 h-3.5 text-amber-300" />
             <span>My Care Journey ({patients.length})</span>
           </button>
+
+          <button
+            onClick={() => setDoctorWorkspaceMode('LABOUR_MONITOR')}
+            className={`px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
+              doctorWorkspaceMode === 'LABOUR_MONITOR'
+                ? 'bg-rose-700 text-white shadow-xs'
+                : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
+            }`}
+          >
+            <Baby className="w-3.5 h-3.5 text-rose-500" />
+            <span>Labour &amp; Delivery Ward Monitor</span>
+          </button>
+
+          <button
+            onClick={() => setDoctorWorkspaceMode('TELE_COUNSELLING')}
+            className={`px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
+              doctorWorkspaceMode === 'TELE_COUNSELLING'
+                ? 'bg-rose-700 text-white shadow-xs'
+                : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
+            }`}
+          >
+            <PhoneCall className="w-3.5 h-3.5 text-red-500" />
+            <span>Emergency Tele-Counselling Queue</span>
+          </button>
+
+          <div className="ml-auto hidden xl:flex items-center gap-2">
+            <button
+              onClick={() => setShowCostEstimatorModal(true)}
+              className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+            >
+              <Calculator className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Cost Estimator</span>
+            </button>
+
+            <button
+              onClick={() => setShowKnowledgeLibraryModal(true)}
+              className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+            >
+              <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Medical Library</span>
+            </button>
+          </div>
         </div>
       </div>
+
 
       {/* 1. Doctor Weekly & Monthly Dashboard View */}
       {doctorWorkspaceMode === 'DASHBOARD' && (
@@ -510,7 +614,25 @@ export const DoctorView: React.FC<DoctorViewProps> = ({ onOpenWhatsAppView }) =>
         </div>
       )}
 
+      {/* 2.6 Hospital Labour & Delivery Ward Monitor */}
+      {doctorWorkspaceMode === 'LABOUR_MONITOR' && (
+        <HospitalLabourDeliveryPanel 
+          patient={selectedPatient || patients.find(p => p.isPregnant) || patients[0]}
+          doctorName={doctorName}
+          onOpenLiveTracker={(pId) => setShowLabourTrackerModalId(pId)}
+        />
+      )}
+
+      {/* 2.7 Emergency Tele-Counselling Queue */}
+      {doctorWorkspaceMode === 'TELE_COUNSELLING' && (
+        <EmergencyCounsellingQueuePanel 
+          doctorId={currentDoctor.id}
+          doctorName={doctorName}
+        />
+      )}
+
       {/* 3. Main Consultation Workspace (Active Queue or In-Consultation Workspace) */}
+
       {doctorWorkspaceMode === 'CONSULTATION' && (!selectedPatient ? (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -802,76 +924,191 @@ export const DoctorView: React.FC<DoctorViewProps> = ({ onOpenWhatsAppView }) =>
 
             {/* Right Column: Unified Consultation, Prescribing & Lab Requisition */}
             <div className="lg:col-span-8 bg-white p-6 rounded-3xl border border-rose-200 shadow-2xs space-y-5 text-xs">
-              {/* 1. Vitals Entry with Foetal Heart Beat Indicator */}
+              
+              {/* PRE-SESSION CLINICAL GIST & ABHA PRIOR RECORDS BAR */}
+              <div className="bg-gradient-to-r from-slate-900 via-rose-950 to-indigo-950 p-4 sm:p-5 rounded-2xl text-white border border-rose-500/40 shadow-md space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30 flex items-center justify-center shrink-0">
+                      <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
+                        <span>Pre-Session Clinical Gist</span>
+                        <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.2 rounded-full font-semibold">
+                          ABDM M1/M2/M3 Synced
+                        </span>
+                      </h4>
+                      <p className="text-[11px] text-slate-300 mt-0.5">
+                        {selectedPatient.clinicalGist?.headline || `${selectedPatient.name} • Longitudinal review before starting session`}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowAbhaPriorRecordsModal(true)}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs transition cursor-pointer shrink-0"
+                    title="Pull and view prior health records from ABDM / ABHA"
+                  >
+                    <ShieldCheck className="w-4 h-4 text-emerald-200" />
+                    <span>📂 View Prior Records (ABHA)</span>
+                  </button>
+                </div>
+
+                {/* 3 Clinical Summary Pills */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-[11px] pt-2 border-t border-white/10">
+                  <div className="bg-white/10 p-2.5 rounded-xl border border-white/10">
+                    <span className="text-slate-400 block text-[10px] font-bold uppercase tracking-wider">Clinical Gist</span>
+                    <span className="text-white font-medium line-clamp-2 italic mt-0.5 block">
+                      &ldquo;{selectedPatient.clinicalGist?.summaryText || selectedPatient.visitReason}&rdquo;
+                    </span>
+                  </div>
+
+                  <div className="bg-white/10 p-2.5 rounded-xl border border-white/10">
+                    <span className="text-slate-400 block text-[10px] font-bold uppercase tracking-wider">Clinical Red Flags</span>
+                    <span className="text-rose-300 font-bold block mt-0.5">
+                      {selectedPatient.pregnancyDetails?.clinicalFlags?.join(', ') || 'Mild Anaemia (Hb 10.2), Rh- (O-)'}
+                    </span>
+                    <span className="text-slate-300 text-[10px]">OGTT 75g screening indicated at 28w</span>
+                  </div>
+
+                  <div className="bg-white/10 p-2.5 rounded-xl border border-white/10">
+                    <span className="text-slate-400 block text-[10px] font-bold uppercase tracking-wider">Medical Adherence</span>
+                    <span className="text-emerald-300 font-bold flex items-center gap-1 mt-0.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>94% On-Track</span>
+                    </span>
+                    <span className="text-slate-300 text-[10px]">Iron + Calcium taken regularly via Jan Aushadhi</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 1. Vitals Entry (Adapted for Neonatal/Infant vs Antenatal vs Adult) */}
               <div className="space-y-2">
                 <span className="text-[10px] font-extrabold text-rose-900 uppercase tracking-wider block flex items-center gap-1.5">
                   <span>💗</span>
-                  <span>1. Clinical Vitals & Foetal Heart Rate</span>
+                  <span>1. Clinical Vitals &amp; Physical Parameters</span>
                 </span>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-600 block mb-0.5">Blood Pressure</label>
-                    <input
-                      type="text"
-                      value={bp}
-                      onChange={(e) => setBp(e.target.value)}
-                      className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-600 block mb-0.5">
-                      {selectedPatient.isPregnant ? 'Maternal Weight (kg)' : 'Patient Weight (kg)'}
-                    </label>
-                    <input
-                      type="number"
-                      value={weightKg}
-                      onChange={(e) => setWeightKg(Number(e.target.value))}
-                      className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs"
-                    />
-                  </div>
-                  {selectedPatient.isPregnant ? (
-                    <>
-                      <div>
-                        <label className="text-[10px] font-bold text-slate-600 block mb-0.5">Fundal Ht (cm)</label>
-                        <input
-                          type="number"
-                          value={fundalHeightCm}
-                          onChange={(e) => setFundalHeightCm(Number(e.target.value))}
-                          className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[10px] font-bold text-rose-700 block mb-0.5 flex items-center gap-1">
-                          <Heart className="w-2.5 h-2.5 fill-rose-500 animate-heart-beat" />
-                          <span>Foetal Heart Rate</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={foetalHeartRate}
-                          onChange={(e) => setFoetalHeartRate(e.target.value)}
-                          className="w-full p-2 bg-rose-50/50 border border-rose-200 text-rose-950 font-bold rounded-xl text-xs"
-                        />
-                      </div>
-                    </>
-                  ) : (
+                
+                {selectedPatient.isNewborn || selectedPatient.age <= 2 ? (
+                  /* Pediatric / Neonatal Vitals */
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 bg-sky-50/50 p-3 rounded-2xl border border-sky-100">
                     <div>
-                      <label className="text-[10px] font-bold text-slate-600 block mb-0.5">Pulse (bpm)</label>
+                      <label className="text-[10px] font-bold text-sky-900 block mb-0.5">Infant Weight (kg)</label>
+                      <input
+                        type="number"
+                        step="0.05"
+                        value={weightKg}
+                        onChange={(e) => setWeightKg(Number(e.target.value))}
+                        className="w-full p-2 bg-white border border-sky-200 rounded-xl font-bold text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-sky-900 block mb-0.5">Length (cm)</label>
+                      <input
+                        type="number"
+                        value={lengthCm}
+                        onChange={(e) => setLengthCm(Number(e.target.value))}
+                        className="w-full p-2 bg-white border border-sky-200 rounded-xl font-bold text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-sky-900 block mb-0.5">Head Circ. (cm)</label>
+                      <input
+                        type="number"
+                        step="0.5"
+                        value={headCircumferenceCm}
+                        onChange={(e) => setHeadCircumferenceCm(Number(e.target.value))}
+                        className="w-full p-2 bg-white border border-sky-200 rounded-xl font-bold text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-sky-900 block mb-0.5">Heart Rate (bpm)</label>
                       <input
                         type="number"
                         value={pulse}
                         onChange={(e) => setPulse(Number(e.target.value))}
+                        className="w-full p-2 bg-white border border-sky-200 rounded-xl font-bold text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-sky-900 block mb-0.5">Temperature</label>
+                      <input
+                        type="text"
+                        value={temperatureF}
+                        onChange={(e) => setTemperatureF(e.target.value)}
+                        className="w-full p-2 bg-white border border-sky-200 rounded-xl font-bold text-xs"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  /* Standard / Antenatal Vitals */
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-600 block mb-0.5">Blood Pressure</label>
+                      <input
+                        type="text"
+                        value={bp}
+                        onChange={(e) => setBp(e.target.value)}
                         className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs"
                       />
                     </div>
-                  )}
-                </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-600 block mb-0.5">
+                        {selectedPatient.isPregnant ? 'Maternal Weight (kg)' : 'Patient Weight (kg)'}
+                      </label>
+                      <input
+                        type="number"
+                        value={weightKg}
+                        onChange={(e) => setWeightKg(Number(e.target.value))}
+                        className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs"
+                      />
+                    </div>
+                    {selectedPatient.isPregnant ? (
+                      <>
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-600 block mb-0.5">Fundal Ht (cm)</label>
+                          <input
+                            type="number"
+                            value={fundalHeightCm}
+                            onChange={(e) => setFundalHeightCm(Number(e.target.value))}
+                            className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-rose-700 block mb-0.5 flex items-center gap-1">
+                            <Heart className="w-2.5 h-2.5 fill-rose-500 animate-heart-beat" />
+                            <span>Foetal Heart Rate</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={foetalHeartRate}
+                            onChange={(e) => setFoetalHeartRate(e.target.value)}
+                            className="w-full p-2 bg-rose-50/50 border border-rose-200 text-rose-950 font-bold rounded-xl text-xs"
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-600 block mb-0.5">Pulse (bpm)</label>
+                        <input
+                          type="number"
+                          value={pulse}
+                          onChange={(e) => setPulse(Number(e.target.value))}
+                          className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* 2. Examination Findings & Clinical Notes with Standard Advice Protocols */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider block">
-                    2. Examination Findings & Counseling Notes
+                    2. Examination Findings &amp; Counseling Notes
                   </label>
                   <span className="text-[10px] text-slate-500 font-semibold">Clinical Protocols:</span>
                 </div>
@@ -899,6 +1136,18 @@ export const DoctorView: React.FC<DoctorViewProps> = ({ onOpenWhatsAppView }) =>
                   className="w-full p-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs leading-relaxed focus:bg-white focus:border-rose-400 focus:outline-none"
                 />
               </div>
+
+              {/* NEWBORN & INFANT VACCINATION SCHEDULE CARD (For babies / pediatric consultations) */}
+              {(selectedPatient.isNewborn || selectedPatient.age <= 5 || selectedPatient.clinicId === 'opd-ped' || selectedPatient.visitType === 'Immunisation') && (
+                <NewbornVaccinationCard 
+                  patient={selectedPatient} 
+                  onVaccineAdministered={() => {
+                    // Force refresh patient state
+                    const p = opdStore.patients.find(x => x.id === selectedPatient.id);
+                    if (p) setSelectedPatientId(p.id);
+                  }}
+                />
+              )}
 
               {/* 3. Prescribe Medications (Referred to Partner Chemist / Pharmacy Store) */}
               <div className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-200 space-y-3">
@@ -1000,97 +1249,111 @@ export const DoctorView: React.FC<DoctorViewProps> = ({ onOpenWhatsAppView }) =>
                 </div>
               </div>
 
-              {/* 4. Request Lab Investigations (Dispatches to Distant Standalone Diagnostic Centre) */}
-              <div className="p-4 bg-purple-50/50 rounded-2xl border border-purple-200 space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">🔬</span>
-                    <span className="font-extrabold text-purple-950 uppercase text-[10px] tracking-wide">
-                      4. Order Laboratory Investigations (Diagnostic Hub)
-                    </span>
+              {/* 4. Request Lab Investigations — Stage-based Maternal Protocol or Standard Lab Hub */}
+              {selectedPatient.isPregnant || selectedPatient.maternalStage || selectedPatient.visitType === 'ANC' || selectedPatient.visitType === 'PNC' || selectedPatient.postnatalDetails || selectedCareJourneyType === 'PREGNANCY' || selectedCareJourneyType === 'POSTNATAL' ? (
+                /* MATERNAL CLINICAL PROTOCOL SUITE (DURING & AFTER PREGNANCY) */
+                <MaternalTestingPanel 
+                  patient={selectedPatient}
+                  selectedLabPartnerId={selectedLabPartnerId}
+                  onSelectLabPartnerId={setSelectedLabPartnerId}
+                  onTestsOrdered={() => {
+                    const p = opdStore.patients.find(x => x.id === selectedPatient.id);
+                    if (p) setSelectedPatientId(p.id);
+                  }}
+                />
+              ) : (
+                /* Standard Outpatient Lab Investigations */
+                <div className="p-4 bg-purple-50/50 rounded-2xl border border-purple-200 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">🔬</span>
+                      <span className="font-extrabold text-purple-950 uppercase text-[10px] tracking-wide">
+                        4. Order Laboratory Investigations (Diagnostic Hub)
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 text-[11px] font-bold self-end sm:self-auto">
+                      <span className="text-purple-800 text-[10px]">Priority:</span>
+                      <select
+                        value={labPriority}
+                        onChange={(e) => setLabPriority(e.target.value as any)}
+                        className="bg-white border border-purple-300 rounded-lg px-2 py-0.5 text-[11px] text-purple-950 font-bold cursor-pointer"
+                      >
+                        <option value="Routine">Routine</option>
+                        <option value="Urgent">Urgent</option>
+                        <option value="Stat">STAT (Emergency)</option>
+                      </select>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-1.5 text-[11px] font-bold self-end sm:self-auto">
-                    <span className="text-purple-800 text-[10px]">Priority:</span>
+                  {/* Distant Lab Facility Selection */}
+                  <div className="p-2.5 bg-white rounded-xl border border-purple-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-purple-700 shrink-0" />
+                      <span className="font-extrabold text-slate-800 text-[11px]">Diagnostic Lab Facility:</span>
+                    </div>
                     <select
-                      value={labPriority}
-                      onChange={(e) => setLabPriority(e.target.value as any)}
-                      className="bg-white border border-purple-300 rounded-lg px-2 py-0.5 text-[11px] text-purple-950 font-bold cursor-pointer"
+                      value={selectedLabPartnerId}
+                      onChange={(e) => setSelectedLabPartnerId(e.target.value)}
+                      className="bg-purple-50 border border-purple-300 rounded-lg px-2.5 py-1 text-xs font-bold text-purple-950 focus:outline-none cursor-pointer"
                     >
-                      <option value="Routine">Routine</option>
-                      <option value="Urgent">Urgent</option>
-                      <option value="Stat">STAT (Emergency)</option>
+                      {opdStore.getLabPartners().map(l => (
+                        <option key={l.id} value={l.id}>
+                          {l.name} ({l.distance}) • Mode: {l.sampleCollectionMode}
+                        </option>
+                      ))}
                     </select>
                   </div>
-                </div>
 
-                {/* Distant Lab Facility Selection */}
-                <div className="p-2.5 bg-white rounded-xl border border-purple-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-purple-700 shrink-0" />
-                    <span className="font-extrabold text-slate-800 text-[11px]">Diagnostic Lab Facility:</span>
+                  {/* Common test badges */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      'Complete Blood Count (CBC / Hb)',
+                      'Urine Routine & Albumin',
+                      'Fasting Blood Sugar & HbA1c',
+                      'Serum Creatinine & Electrolytes',
+                      'Liver Function Test (LFT)',
+                      'Thyroid Profile (Total T3, T4, TSH)',
+                      'Ultrasound Abdomen & Pelvis'
+                    ].map(test => {
+                      const isSelected = selectedLabTests.includes(test);
+                      return (
+                        <button
+                          key={test}
+                          type="button"
+                          onClick={() => handleToggleLabTest(test)}
+                          className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                            isSelected
+                              ? 'bg-purple-800 text-white shadow-xs'
+                              : 'bg-white hover:bg-purple-100 text-purple-950 border border-purple-300'
+                          }`}
+                        >
+                          {isSelected && <Check className="w-3 h-3 text-purple-200" />}
+                          <span>{test}</span>
+                        </button>
+                      );
+                    })}
                   </div>
-                  <select
-                    value={selectedLabPartnerId}
-                    onChange={(e) => setSelectedLabPartnerId(e.target.value)}
-                    className="bg-purple-50 border border-purple-300 rounded-lg px-2.5 py-1 text-xs font-bold text-purple-950 focus:outline-none cursor-pointer"
-                  >
-                    {opdStore.getLabPartners().map(l => (
-                      <option key={l.id} value={l.id}>
-                        {l.name} ({l.distance}) • Mode: {l.sampleCollectionMode}
-                      </option>
-                    ))}
-                  </select>
-                </div>
 
-                {/* Common test badges */}
-                <div className="flex flex-wrap gap-1.5">
-                  {[
-                    'Oral Glucose Tolerance Test 75g (OGTT)',
-                    'Complete Blood Count (CBC / Hb)',
-                    'Urine Routine & Albumin',
-                    'Ultrasound Growth Scan',
-                    'Indirect Coombs Test (Rh antibody)',
-                    'Fasting Blood Sugar & HbA1c',
-                    'Serum Creatinine & Electrolytes'
-                  ].map(test => {
-                    const isSelected = selectedLabTests.includes(test);
-                    return (
-                      <button
-                        key={test}
-                        type="button"
-                        onClick={() => handleToggleLabTest(test)}
-                        className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition cursor-pointer flex items-center gap-1.5 ${
-                          isSelected
-                            ? 'bg-purple-800 text-white shadow-xs'
-                            : 'bg-white hover:bg-purple-100 text-purple-950 border border-purple-300'
-                        }`}
-                      >
-                        {isSelected && <Check className="w-3 h-3 text-purple-200" />}
-                        <span>{test}</span>
-                      </button>
-                    );
-                  })}
+                  {/* Custom Test input */}
+                  <div className="flex items-center gap-2 pt-1">
+                    <input
+                      type="text"
+                      placeholder="Enter custom lab investigation..."
+                      value={customTestInput}
+                      onChange={(e) => setCustomTestInput(e.target.value)}
+                      className="flex-1 p-2 bg-white border border-purple-200 rounded-xl text-xs"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddCustomTest}
+                      className="px-3.5 py-2 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-xl text-xs cursor-pointer shadow-2xs"
+                    >
+                      + Add Test
+                    </button>
+                  </div>
                 </div>
-
-                {/* Custom Test input */}
-                <div className="flex items-center gap-2 pt-1">
-                  <input
-                    type="text"
-                    placeholder="Enter custom lab investigation..."
-                    value={customTestInput}
-                    onChange={(e) => setCustomTestInput(e.target.value)}
-                    className="flex-1 p-2 bg-white border border-purple-200 rounded-xl text-xs"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAddCustomTest}
-                    className="px-3.5 py-2 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-xl text-xs cursor-pointer shadow-2xs"
-                  >
-                    + Add Test
-                  </button>
-                </div>
-              </div>
+              )}
 
               {/* Clinician-Defined Care Pathway & Follow-Up Plan */}
               <div className="p-4 bg-gradient-to-br from-teal-50/70 to-emerald-50/50 rounded-2xl border border-teal-200 space-y-3">
@@ -1312,6 +1575,42 @@ export const DoctorView: React.FC<DoctorViewProps> = ({ onOpenWhatsAppView }) =>
           onClose={() => setSelectedOrderForAnalyser(null)}
         />
       )}
+
+      {/* Labour & Delivery Live Tracker Modal for Doctor */}
+      {showLabourTrackerModalId && (
+        <LabourDeliveryLiveTrackerModal
+          initialPatientId={showLabourTrackerModalId}
+          isHospitalStaffView={true}
+          onClose={() => setShowLabourTrackerModalId(null)}
+        />
+      )}
+
+      {/* Cost Estimator Modal for Doctor */}
+      {showCostEstimatorModal && (
+        <TreatmentCostEstimatorModal
+          initialPatientId={selectedPatientId || undefined}
+          onClose={() => setShowCostEstimatorModal(false)}
+        />
+      )}
+
+      {/* Knowledge Library Modal for Doctor */}
+      {showKnowledgeLibraryModal && (
+        <KnowledgeLibraryModal
+          onClose={() => setShowKnowledgeLibraryModal(false)}
+        />
+      )}
+
+      {/* ABHA Prior Records Modal */}
+      {showAbhaPriorRecordsModal && selectedPatient && (
+        <AbhaPriorRecordsModal
+          patient={selectedPatient}
+          onClose={() => setShowAbhaPriorRecordsModal(false)}
+          onImportToNotes={(importedText) => {
+            setDoctorNotes(prev => prev ? `${prev}\n\n${importedText}` : importedText);
+          }}
+        />
+      )}
     </div>
   );
 };
+

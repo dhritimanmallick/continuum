@@ -1,6 +1,6 @@
 export type PortalType = 'OPD' | 'LAB' | 'PHARMA' | 'ADMIN' | 'VICINITY' | 'REVENUES';
 export type OpdRole = 'RECEPTION' | 'DOCTOR';
-export type OpdUserRole = 'ADMIN' | 'RECEPTION' | 'DOCTOR' | 'LAB' | 'PHARMA';
+export type OpdUserRole = 'ADMIN' | 'RECEPTION' | 'DOCTOR' | 'LAB' | 'PHARMA' | 'PATIENT';
 
 export interface AuthUser {
   id: string;
@@ -22,6 +22,11 @@ export interface AuthUser {
   vendorPartnerId?: string;
   ondcParticipantId?: string;
   isAddonVendor?: boolean;
+  patientId?: string;
+  familyMemberId?: string;
+  isFamilyMember?: boolean;
+  primaryPatientName?: string;
+  gestationalWeeks?: number;
 }
 
 export interface HospitalRoom {
@@ -54,8 +59,8 @@ export interface DiagnosticLabConfig {
 export interface IntegrationBackboneEvent {
   id: string;
   timestamp: string;
-  sourceModule: 'ADMIN_PORTAL' | 'RECEPTION_DESK' | 'DOCTOR_STATION' | 'PATHOLOGY_LAB' | 'PHARMACY_HUB' | 'ABDM_GATEWAY';
-  targetModule: 'ADMIN_PORTAL' | 'RECEPTION_DESK' | 'DOCTOR_STATION' | 'PATHOLOGY_LAB' | 'PHARMACY_HUB' | 'ABDM_GATEWAY' | 'PATIENT_APP';
+  sourceModule: 'ADMIN_PORTAL' | 'RECEPTION_DESK' | 'DOCTOR_STATION' | 'PATHOLOGY_LAB' | 'PHARMACY_HUB' | 'ABDM_GATEWAY' | 'EHR_CORE';
+  targetModule: 'ADMIN_PORTAL' | 'RECEPTION_DESK' | 'DOCTOR_STATION' | 'PATHOLOGY_LAB' | 'PHARMACY_HUB' | 'ABDM_GATEWAY' | 'PATIENT_APP' | 'EHR_CORE';
   eventType: 
     | 'DOCTOR_ONBOARDED'
     | 'ROOM_ALLOCATED'
@@ -69,7 +74,9 @@ export interface IntegrationBackboneEvent {
     | 'MEDICINE_DISPENSED'
     | 'FHIR_BUNDLE_EXPORTED'
     | 'VICINITY_INTAKE_TOGGLED'
-    | 'VICINITY_ORDER_ACCEPTED';
+    | 'VICINITY_ORDER_ACCEPTED'
+    | 'VACCINE_ADMINISTERED'
+    | 'MATERNAL_TEST_ORDERED';
   title: string;
   details: string;
   patientId?: string;
@@ -411,6 +418,78 @@ export interface PathologistAchievement {
   badgeColor: string;
 }
 
+// -------------------------------------------------------------
+// NEWBORN VACCINATIONS & IMMUNIZATION SCHEDULE (NIS / WHO / IAP)
+// -------------------------------------------------------------
+export type VaccineScheduleMilestone = 
+  | 'AT_BIRTH'      // 0 - 24 hours
+  | 'BIRTH'
+  | '6_WEEKS'       // 1.5 months
+  | '10_WEEKS'      // 2.5 months
+  | '14_WEEKS'      // 3.5 months
+  | '9_12_MONTHS'   // 9 - 12 months
+  | '16_24_MONTHS'  // 1.5 - 2 years
+  | '5_6_YEARS';    // School entry
+
+export interface VaccineScheduleItem {
+  id?: string;
+  vaccineCode: string;
+  vaccineName: string;
+  targetDisease?: string;
+  recommendedAgeLabel?: string;
+  milestone: VaccineScheduleMilestone;
+  dosage?: string;
+  dose?: string;
+  route: string; // 'Intradermal' | 'Oral' | 'Intramuscular' | 'Subcutaneous'
+  site: string;  // e.g. 'Left upper arm', 'Anterolateral mid-thigh', 'Oral'
+  status: 'GIVEN' | 'DUE' | 'OVERDUE' | 'UPCOMING';
+  targetAge?: string;
+  preventsAgainst?: string;
+  clinicalNotes?: string;
+  notes?: string;
+  dueDate?: string;
+  administeredDate?: string;
+  administeredBy?: string;
+  batchNumber?: string;
+  defaultBatch?: string;
+  mcpCardEntry?: boolean;
+  adverseReactionNotes?: string;
+}
+
+// -------------------------------------------------------------
+// MATERNAL TESTS (DURING PREGNANCY - ANC & AFTER PREGNANCY - PNC)
+// -------------------------------------------------------------
+export type MaternalClinicalStage = 
+  | 'PREGNANCY_1ST_TRIMESTER'  // <= 12 weeks
+  | 'PREGNANCY_2ND_TRIMESTER'  // 13 - 28 weeks
+  | 'PREGNANCY_3RD_TRIMESTER'  // 29 - 40 weeks
+  | 'POSTNATAL_IMMEDIATE'      // Day 1 - Day 3 postpartum
+  | 'POSTNATAL_6WEEKS'         // Day 42 postpartum checkup
+  | 'GENERAL_NON_PREGNANT'
+  | '1st Trimester'
+  | '2nd Trimester'
+  | '3rd Trimester'
+  | 'Postnatal Immediate'
+  | 'Postnatal 6-Week';
+
+export interface MaternalTestProtocol {
+  id: string;
+  testCode: string;
+  testName: string;
+  stage: MaternalClinicalStage;
+  stageLabel?: string;
+  timingDescription?: string;
+  clinicalRationale?: string;
+  clinicalIndication?: string;
+  timing?: string;
+  category?: 'HEMATOLOGY' | 'BIOCHEMISTRY' | 'ULTRASOUND' | 'SEROLOGY' | 'URINE' | 'SCREENING' | string;
+  priority: 'Routine' | 'Urgent' | 'Stat';
+  isMandatory?: boolean;
+  targetCondition?: string;
+  sampleType?: string;
+  turnaroundHours?: string;
+}
+
 export interface ClinicalGist {
   headline?: string;
   summaryText?: string;
@@ -474,10 +553,47 @@ export interface OpdPatient {
     clinicalFlags?: string[];
     [key: string]: any;
   };
+  maternalStage?: MaternalClinicalStage;
+  postnatalDetails?: {
+    deliveryDate?: string;
+    deliveryHospital?: string;
+    deliveryType?: 'Normal Vaginal' | 'Cesarean (LSCS)' | 'Caesarean (LSCS)' | 'Assisted / Instrumental' | 'Assisted Vacuum/Forceps' | string;
+    babyGender?: 'Male' | 'Female' | 'male' | 'female';
+    babyName?: string;
+    hadGdm?: boolean;
+    hadPreeclampsia?: boolean;
+    postpartumDay?: number;
+    epdsScore?: number;
+    antiDAdministered?: boolean;
+    infantFeeding?: 'Exclusive Breastfeeding' | 'Formula' | 'Mixed' | string;
+    complications?: string[];
+    maternalBloodGroup?: string;
+    neonatalBloodGroup?: string;
+    [key: string]: any;
+  };
+  isNewborn?: boolean;
+  birthDetails?: {
+    dateOfBirth?: string;
+    birthTime?: string;
+    birthWeightKg?: number;
+    gestationWeeksAtBirth?: number;
+    gestationalAgeAtBirthWeeks?: number;
+    deliveryType?: 'Normal Vaginal' | 'Cesarean (LSCS)' | 'Caesarean (LSCS)' | 'Assisted / Instrumental' | 'Assisted Vacuum/Forceps' | string;
+    apgarScore1Min?: number;
+    apgarScore5Min?: number;
+    motherPatientId?: string;
+    motherName?: string;
+    bloodGroup?: string;
+    maternalBloodGroup?: string;
+    mcpCardNumber?: string;
+    placeOfBirth?: string;
+    [key: string]: any;
+  };
+  vaccinationSchedule?: VaccineScheduleItem[];
   previousOpdRecords?: PreviousOpdVisit[];
   clinicalGist: ClinicalGist;
   visitReason: string;
-  visitType?: 'ANC' | 'PNC' | 'Follow-up' | 'Gynaecology' | 'Immunisation' | 'General' | string;
+  visitType?: 'ANC' | 'PNC' | 'Newborn' | 'Pediatric' | 'Follow-up' | 'Gynaecology' | 'Immunisation' | 'General' | string;
   queueStatus: 'Waiting' | 'With Doctor' | 'Lab Pending' | 'In Lab' | 'Completed' | string;
   waitingSince?: string;
   assignedDoctor?: string;
@@ -1116,3 +1232,310 @@ export interface DashboardMetrics {
   patientsEnrolledThisMonth?: number;
   [key: string]: any;
 }
+
+// ==========================================
+// MODULE 1: FAMILY MEMBER MANAGEMENT
+// ==========================================
+export type FamilyRelationship = 
+  | 'SPOUSE' 
+  | 'CHILD' 
+  | 'PARENT' 
+  | 'MOTHER' 
+  | 'FATHER' 
+  | 'SIBLING' 
+  | 'MOTHER_IN_LAW' 
+  | 'FATHER_IN_LAW' 
+  | 'DEPENDANT' 
+  | 'OTHER';
+
+export type ConsentLevel = 
+  | 'FULL_ACCESS' 
+  | 'EMERGENCY_ONLY' 
+  | 'LAB_AND_MEDS_ONLY' 
+  | 'RESTRICTED';
+
+export interface FamilyMember {
+  id: string;
+  primaryPatientId: string;
+  name: string;
+  relationship: FamilyRelationship;
+  age: number;
+  gender: 'Female' | 'Male' | 'Other';
+  mobile: string;
+  abhaNumber?: string;
+  abhaAddress?: string;
+  abhaLinked: boolean;
+  bloodGroup?: string;
+  isEmergencyContact: boolean;
+  emergencyPriority?: number;
+  consentLevel: ConsentLevel;
+  allowedRecordTypes: ('PRESCRIPTIONS' | 'LAB_REPORTS' | 'APPOINTMENTS' | 'MATERNITY_UPDATES' | 'VACCINATIONS')[];
+  linkedPatientRecordId?: string;
+  medicalHistorySummary?: string;
+  allergies?: string[];
+  chronicConditions?: string[];
+  notes?: string;
+}
+
+// ==========================================
+// MODULE 2: MEDICAL KNOWLEDGE LIBRARY & AI COUNSELLING
+// ==========================================
+export type KnowledgeCategory = 
+  | 'FIRST_TRIMESTER' 
+  | 'SECOND_TRIMESTER' 
+  | 'THIRD_TRIMESTER' 
+  | 'LABOUR_AND_BIRTH' 
+  | 'POSTNATAL_CARE' 
+  | 'NEWBORN_CARE' 
+  | 'GYNECOLOGY' 
+  | 'NUTRITION_LIFESTYLE' 
+  | 'HIGH_RISK_AWARENESS';
+
+export interface KnowledgeChapter {
+  id: string;
+  chapterNumber: number;
+  title: string;
+  content: string;
+  keyTakeaways: string[];
+  clinicalPearls?: string[];
+  warningSigns?: string[];
+}
+
+export interface KnowledgeDocument {
+  id: string;
+  title: string;
+  author: string;
+  publisherOrSource: string;
+  editionYear: number;
+  coverImage?: string;
+  category: KnowledgeCategory;
+  description: string;
+  estimatedReadMinutes: number;
+  language: string;
+  chapters: KnowledgeChapter[];
+  tags: string[];
+  isFeatured?: boolean;
+}
+
+export interface KnowledgeVideoResource {
+  id: string;
+  title: string;
+  speaker: string;
+  speakerDesignation: string;
+  durationMinutes: number;
+  category: KnowledgeCategory;
+  thumbnailUrl?: string;
+  videoUrl: string;
+  transcript: string;
+  keyLessons: string[];
+}
+
+export interface RagCitation {
+  sourceTitle: string;
+  chapterOrSection: string;
+  pageNumber?: number;
+  confidence: number;
+  excerpt: string;
+}
+
+export interface AiCounsellingMessage {
+  id: string;
+  sender: 'USER' | 'AI_COUNSELLOR';
+  timestamp: string;
+  content: string;
+  citations?: RagCitation[];
+  isEmergencyEscalation?: boolean;
+  escalationReason?: string;
+  suggestedQuestions?: string[];
+}
+
+// ==========================================
+// MODULE 3: ESTIMATED TREATMENT COSTS & WHATSAPP
+// ==========================================
+export type PackageType = 
+  | 'NORMAL_DELIVERY' 
+  | 'C_SECTION' 
+  | 'ANTENATAL_CARE' 
+  | 'HIGH_RISK_MATERNITY' 
+  | 'GDM_MONITORING' 
+  | 'GYNEC_SURGERY' 
+  | 'OPD_SPECIALIST';
+
+export interface ItemizedCostItem {
+  id: string;
+  category: 'BED_AND_ROOM' | 'DOCTOR_FEES' | 'OT_CHARGES' | 'PEDIATRICIAN' | 'MEDICINES_CONSUMABLES' | 'LAB_AND_SCANS' | 'NURSING';
+  name: string;
+  description: string;
+  amountInr: number;
+  isOptional?: boolean;
+  isCoveredByAyushmanBharatPMJAY?: boolean;
+}
+
+export interface TreatmentPackageConfig {
+  id: string;
+  packageType: PackageType;
+  name: string;
+  description: string;
+  durationStay: string;
+  basePriceInr: number;
+  estimatedTotalInr: number;
+  items: ItemizedCostItem[];
+  roomType: 'General Ward' | 'Semi-Private Sharing' | 'Private AC Room' | 'Deluxe Suite';
+  pmjayCoverageNote?: string;
+  hospitalName: string;
+}
+
+export interface CostQuotationRequest {
+  id: string;
+  patientId: string;
+  patientName: string;
+  mobile: string;
+  packageId: string;
+  packageName: string;
+  roomTypeSelected: string;
+  estimatedTotalInr: number;
+  breakdown: ItemizedCostItem[];
+  generatedAt: string;
+  validUntil: string;
+  quotationReference: string;
+  status: 'GENERATED' | 'SENT_WHATSAPP' | 'ACCEPTED' | 'QUERY_RAISED';
+  whatsAppDeliveryStatus?: 'SENT' | 'DELIVERED' | 'READ';
+  patientQuery?: string;
+}
+
+// ==========================================
+// MODULE 4: EMERGENCY DOCTOR COUNSELLING APPOINTMENTS
+// ==========================================
+export interface EmergencyCounsellingSlot {
+  id: string;
+  doctorId: string;
+  doctorName: string;
+  doctorSpecialty: string;
+  doctorAvatar: string;
+  roomNumber: string;
+  status: 'AVAILABLE_NOW' | 'BUSY_IN_OPD' | 'NEXT_AVAILABLE';
+  estimatedWaitMinutes: number;
+  consultationDurationMinutes: number;
+  sessionType: 'AUDIO' | 'VIDEO';
+}
+
+export interface CounsellingAppointment {
+  id: string;
+  patientId: string;
+  patientName: string;
+  patientAge: number;
+  patientMobile: string;
+  doctorId: string;
+  doctorName: string;
+  bookedAt: string;
+  slotTime: string;
+  consultationType: 'AUDIO' | 'VIDEO';
+  isEmergencyPriority: boolean;
+  urgencyReason: string;
+  patientConsentedRecordsAccess: boolean;
+  status: 'WAITING' | 'IN_CALL' | 'COMPLETED' | 'ESCALATED_TO_ER';
+  clinicalNotes?: string;
+  doctorRecommendations?: string;
+  escalatedToPhysicalOpd?: boolean;
+  escalatedToHospitalEmergency?: boolean;
+  referralDepartment?: string;
+}
+
+// ==========================================
+// MODULE 5: LABOUR & DELIVERY UPDATES FOR FAMILY MEMBERS
+// ==========================================
+export type LabourStageCode = 
+  | 'STAGE_1_ADMISSION'
+  | 'STAGE_2_LABOUR_INITIATED'
+  | 'STAGE_3_LABOUR_ROOM'
+  | 'STAGE_4_DELIVERY_UNDERWAY'
+  | 'STAGE_5_BABY_DELIVERED'
+  | 'STAGE_6_RECOVERY_WARD'
+  | 'STAGE_7_DISCHARGE_READY';
+
+export interface ConsentedFamilyContact {
+  id: string;
+  name: string;
+  relationship: string;
+  mobile: string;
+  canReceiveWhatsApp: boolean;
+  canReceiveSms: boolean;
+  allowedMilestones: LabourStageCode[];
+  isActive: boolean;
+}
+
+export interface LabourStageUpdate {
+  id: string;
+  stage: LabourStageCode;
+  stageTitle: string;
+  timestamp: string;
+  doctorOrStaffName: string;
+  publicMessage: string;
+  privateClinicalNote?: string;
+  babyDetails?: {
+    gender: 'Boy' | 'Girl' | 'Twins' | string;
+    birthWeightKg: number;
+    deliveryType: 'Normal Vaginal' | 'Lower Segment C-Section (LSCS)' | 'Assisted Vacuum';
+    timeOfBirth: string;
+    apgar1Min?: number;
+    apgar5Min?: number;
+    motherStatus: string;
+  };
+  recipientsNotified: {
+    name: string;
+    channel: 'WHATSAPP' | 'SMS' | 'PUSH';
+    status: 'DELIVERED' | 'READ' | 'SENT';
+    deliveredAt: string;
+  }[];
+}
+
+export interface LabourDeliveryTracker {
+  id: string;
+  patientId: string;
+  patientName: string;
+  admissionDate: string;
+  wardBed: string;
+  attendingDoctor: string;
+  currentStage: LabourStageCode;
+  currentStageProgressPercent: number;
+  history: LabourStageUpdate[];
+  consentedContacts: ConsentedFamilyContact[];
+  isDischarged: boolean;
+}
+
+// ==========================================
+// MODULE 6: UNIFIED NOTIFICATIONS & COMMUNICATION CENTRE
+// ==========================================
+export type NotificationChannel = 'WHATSAPP' | 'SMS' | 'PUSH' | 'IN_APP';
+
+export type NotificationCategory = 
+  | 'APPOINTMENT' 
+  | 'LAB_REPORT' 
+  | 'LABOUR_UPDATE' 
+  | 'PAYMENT_BILLING' 
+  | 'MEDICINE_REMINDER' 
+  | 'CLINICAL_ALERT';
+
+export interface NotificationPreference {
+  patientId: string;
+  whatsappEnabled: boolean;
+  smsEnabled: boolean;
+  pushEnabled: boolean;
+  categories: Record<NotificationCategory, { whatsapp: boolean; sms: boolean; push: boolean }>;
+}
+
+export interface UnifiedNotificationItem {
+  id: string;
+  patientId: string;
+  patientName: string;
+  recipientMobile: string;
+  category: NotificationCategory;
+  channels: NotificationChannel[];
+  title: string;
+  body: string;
+  timestamp: string;
+  status: 'DELIVERED' | 'SENT' | 'READ' | 'FAILED';
+  deliveryReceipts: { channel: NotificationChannel; status: string; timestamp: string }[];
+  actionUrl?: string;
+}
+

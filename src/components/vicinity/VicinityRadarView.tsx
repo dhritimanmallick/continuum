@@ -17,12 +17,14 @@ import {
   Percent,
   Check,
   Phone,
-  Power
+  Power,
+  Navigation
 } from 'lucide-react';
 import { vicinityRevenueService } from '../../services/vicinityRevenueService';
 import { opdStore } from '../../services/opdStore';
 import { authService } from '../../services/authService';
 import { LabPartner, PharmacyPartner, VicinityOrderBroadcast } from '../../types';
+import { GoogleMapsVicinityTracker } from './GoogleMapsVicinityTracker';
 
 interface VicinityRadarViewProps {
   onNavigateToPortal?: (portal: 'OPD' | 'LAB' | 'PHARMA' | 'REVENUES', role?: 'DOCTOR' | 'RECEPTION') => void;
@@ -33,6 +35,7 @@ export const VicinityRadarView: React.FC<VicinityRadarViewProps> = ({
   onNavigateToPortal,
   onOpenWhatsAppView 
 }) => {
+  const [displayMode, setDisplayMode] = useState<'MAP' | 'RADAR'>('MAP');
   const [radiusKm, setRadiusKm] = useState<number>(vicinityRevenueService.getVicinityRadius());
   const [activeTab, setActiveTab] = useState<'all' | 'labs' | 'pharmacies' | 'broadcasts'>('all');
   const [broadcasts, setBroadcasts] = useState<VicinityOrderBroadcast[]>(vicinityRevenueService.getActiveBroadcasts());
@@ -122,8 +125,44 @@ export const VicinityRadarView: React.FC<VicinityRadarViewProps> = ({
         </div>
       </div>
 
-      {/* Visual Radar & Connectivity Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Mode Switcher Tabs */}
+      <div className="flex items-center justify-between bg-white p-2.5 rounded-2xl border border-slate-200 shadow-xs">
+        <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl text-xs font-bold">
+          <button
+            onClick={() => setDisplayMode('MAP')}
+            className={`px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
+              displayMode === 'MAP'
+                ? 'bg-rose-700 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Navigation className="w-3.5 h-3.5 text-amber-300" />
+            <span>🗺️ Google Maps Live Vicinity Tracker &amp; Cost Chooser</span>
+          </button>
+          <button
+            onClick={() => setDisplayMode('RADAR')}
+            className={`px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
+              displayMode === 'RADAR'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Radio className="w-3.5 h-3.5 text-rose-400" />
+            <span>📡 Concentric Radar Sweep &amp; Order Broadcasts</span>
+          </button>
+        </div>
+
+        <div className="text-xs text-slate-500 font-medium hidden sm:block pr-2">
+          Center: St. Anne Mother &amp; Child Hospital (Hubballi)
+        </div>
+      </div>
+
+      {displayMode === 'MAP' ? (
+        <GoogleMapsVicinityTracker />
+      ) : (
+        <>
+          {/* Visual Radar & Connectivity Overview */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Radar Graphic & Geographic Concentric Rings */}
         <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center relative overflow-hidden">
@@ -554,6 +593,8 @@ export const VicinityRadarView: React.FC<VicinityRadarViewProps> = ({
             ))}
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );
