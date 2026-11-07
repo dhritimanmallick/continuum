@@ -30,7 +30,11 @@ const ai = new GoogleGenAI({
   httpOptions: {
     headers: {
       'User-Agent': 'aistudio-build'
-    }
+    },
+    // Cap every Gemini call: on a slow or failing response, routes fall back to their
+    // built-in non-AI output instead of leaving the screen waiting.
+    timeout: 15000,
+    retryOptions: { attempts: 1 }
   }
 });
 
